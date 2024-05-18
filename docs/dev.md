@@ -10,6 +10,12 @@ todo: update config explanation
 BUILD_ENV=development docker-compose up --build
 ```
 
+If using the gogetter-cli:
+
+```
+gogetter run dev
+```
+
 ## Usage
 
 After the containers have been set up locally, the client can be accessed at [http://localhost:3000]. The server can be accessed at [http://localhost:3001].
@@ -18,6 +24,18 @@ After the containers have been set up locally, the client can be accessed at [ht
 
 ```
 docker-compose down --remove-orphans
+```
+
+If using the gogetter-cli:
+
+```
+gogetter stop
+```
+
+OR
+
+```
+gogetter down
 ```
 
 ## Troubleshooting

@@ -40,18 +40,18 @@ func init() {
 		"database.password":     "password",
 		"database.sslmode":      "prefer",
 		"databse.loglevel":      "error",
-		"database.auto_migrate": true,
+		"database.auto_migrate": false,
 
-		"mailer.host":         "smtp.gmail.com",
+		"mailer.host":         "smtp.mailersend.net",
 		"mailer.port":         587,
-		"mailer.username":     "phyokyawsoe89@gmail.com",
-		"mailer.app_password": "lyzo mila fxha dupi",
+		"mailer.username":     "MS_ZsiAoC@peoplematter.app",
+		"mailer.app_password": "jmU7b5NxKr3Da75n",
 		"mailer.tls":          true,
 
-		"jwt_mw.signing_key":    "authsecret",
-		"jwt_mw.token_lookup":   "cookie:jwt",
-		"jwt_mw.signing_method": "HS256",
-		"jwt_mw.exp_in_hours":   72,
+		"echo_jwt.signing_key":    "authsecret",
+		"echo_jwt.token_lookup":   "cookie:jwt",
+		"echo_jwt.signing_method": "HS256",
+		"echo_jwt.exp_in_hours":   72,
 
 		"auth.signing_key":    "confirmationsecret",
 		"auth.signing_method": "HS256",
@@ -81,7 +81,7 @@ func main() {
 			schema.Adjustments{},
 			schema.Document{},
 		),
-		jwt.InitiateModule("jwt_mw"),
+		jwt.InitiateModule("echo_jwt"),
 		mailer.InitiateModule("mailer"),
 
 		//-- Internal Domains Start --

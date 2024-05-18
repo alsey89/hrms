@@ -111,15 +111,12 @@ func (d *Domain) CreateCompanyHandler(c echo.Context) error {
 	}
 
 	//send confirmation email
-	// todo define send mail function in gogetter
-	m := d.params.Mailer.NewMessage()
-	m.SetHeader("From", "hello@peoplematter.app")
-	m.SetHeader("To", form.AdminEmail)
-	m.SetHeader("Subject", "Welcome to People Matter")
-	m.SetBody("text/html",
+	err = d.params.Mailer.SendTransactionalMail(
+		"hello@peoplematter.app",
+		form.AdminEmail,
+		"Welcome to People Matter",
 		"<p>Welcome to People Matter</p><p>Your account has been created. Please click the link below to confirm your email address.</p><a href=\"http://localhost:3000/onboarding/confirmation?token="+*token+"\">Confirm Email</a>",
 	)
-	err = d.params.Mailer.Send(m)
 	if err != nil {
 		return fmt.Errorf("[CreateNewCompanyAndAdminUser] Error sending confirmation email %w", err)
 	}

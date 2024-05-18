@@ -17,10 +17,10 @@ RUN if [ "$BUILD_ENV" = "development" ]; then \
         go install github.com/cosmtrek/air@latest; \
     fi
 
-CMD if [ "$BUILD_ENV" = "production" ]; then \
-        echo "Starting production server"; \
-        go build -o /bin/main . && /bin/main; \
-    else \
+CMD if [ "$BUILD_ENV" = "development" ]; then \
         echo "Starting dev server"; \
         air; \
+    else \
+        echo "Starting production server"; \
+        go build -o /bin/main . && /bin/main; \
     fi

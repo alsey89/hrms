@@ -24,7 +24,7 @@ type Params struct {
 
 	Lifecycle fx.Lifecycle
 	Logger    *zap.Logger
-	Server    *server.HTTPServer
+	Server    *server.Module
 	Database  *postgres.Module
 	Mailer    *mailer.Module
 

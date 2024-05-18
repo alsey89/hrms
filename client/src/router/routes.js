@@ -11,7 +11,7 @@ const originRoutes = [
     isActive: true,
     path: "/",
     name: "DashboardLayout",
-    component: () => import("../layouts/full-screen.vue"),
+    component: () => import("../layouts/default.vue"),
     children: [
       {
         isActive: true,

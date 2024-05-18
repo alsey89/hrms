@@ -11,23 +11,15 @@
 </template>
 
 <script setup>
-
 import { useRouter } from 'vue-router';
 import { computed, onMounted, ref } from 'vue';
-
 import { Card } from '@/components/ui/card';
 import { Icon } from '@iconify/vue';
-
 import { redirectAfterDelay } from "@/util.js"
+import api from "@/plugins/axios";  // Import your custom axios instance
 
-import axios from 'axios';
-
-//get query parameters from router
 const router = useRouter();
 const query = computed(() => router.currentRoute.value.query);
-
-const api_url = import.meta.env.VITE_API_URL;
-
 const confirmed = ref(false);
 
 onMounted(async () => {
@@ -37,11 +29,8 @@ onMounted(async () => {
         return;
     }
     try {
-        axios.defaults.headers.post["Content-Type"] = "application/json";
-        axios.defaults.headers.post["Accept"] = "application/json";
-        axios.defaults.withCredentials = true;
         const tokenParam = encodeURIComponent(query.value.token);
-        const response = await axios.get(`${api_url}/auth/confirmation?token=${tokenParam}`);
+        const response = await api.get(`/auth/confirmation?token=${tokenParam}`);  // Use the custom axios instance
         if (response.status === 200) {
             setTimeout(() => {
                 confirmed.value = true;
@@ -60,5 +49,4 @@ onMounted(async () => {
         }, 3000);
     }
 });
-
 </script>

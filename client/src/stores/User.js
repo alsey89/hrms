@@ -1,11 +1,6 @@
 import { defineStore } from "pinia";
 import axios from "axios";
-
-const api_url = import.meta.env.VITE_API_URL;
-
-axios.defaults.headers.post["Content-Type"] = "application/json";
-axios.defaults.headers.post["Accept"] = "application/json";
-axios.defaults.withCredentials = true;
+import api from "@/plugins/axios";
 
 export const useUserStore = defineStore("user-store", {
   state: () => ({
@@ -33,7 +28,7 @@ export const useUserStore = defineStore("user-store", {
         confirmPassword: payload.confirmPassword,
       };
       try {
-        const response = await axios.post(api_url + "/company", data);
+        const response = await api.post("/company", data);
         if (response.status >= 200 && response.status < 300) {
           return true;
         } else {
@@ -63,7 +58,7 @@ export const useUserStore = defineStore("user-store", {
       };
 
       try {
-        const response = await axios.post(api_url + "/auth/signin", data);
+        const response = await api.post("/auth/signin", data);
         if (response.status >= 200 && response.status < 300) {
           return true;
         } else {
@@ -97,8 +92,7 @@ export const useUserStore = defineStore("user-store", {
     },
     async getCsrfToken() {
       try {
-        axios.defaults.withCredentials = true;
-        const response = await axios.get(api_url + "/auth/csrf");
+        const response = await api.get("/auth/csrf");
         if (response.status >= 200 && response.status < 300) {
           return true;
         }
