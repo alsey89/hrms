@@ -61,15 +61,10 @@ BUILD_ENV=production docker-compose up --build
 ## Client
 
 - language: javascript
-- framework: Nuxt3
+- framework: Vue3 with Vite
 - architecture follows framework conventions
-- Components:
-  - components subfolders are arranged by function
-  - "ui" folder contains shadcn-vue components
-    - the tailwind classes of the components in the components folder are global
-    - the tailwind classes of the components in the pages override the global if applied
-- Store:
-  - library: pinia, pinia-persisted-state
+- store:
+  - library: pinia
 
 ## Server
 
@@ -77,6 +72,7 @@ BUILD_ENV=production docker-compose up --build
 - server framework: Echo
 - database: PostgreSQL
 - ORM: [GORM] (https://gorm.io/)
+- DI: [Fx]
 
 ### Style
 
@@ -86,31 +82,12 @@ BUILD_ENV=production docker-compose up --build
 
 ### Architecture
 
-- CLEAN architecture
-- Partially Domain Driven
-- dependency injection: hander (api interface) <- service (business logic) <- repository (db actions) <- db client
-- todo: define narrower interfaces
+- domain-driven
+- dependency injection using Fx framework
 
 ### Folder Structure
 
-All internal domains are under the internal folder.
-
-Each domain contains:
-
-- Model: structs specific to the domain
-- Error: errors specific to the domain
-- Routes: API routes specific to the domain
-- Handler: API interfaces specific to the domain
-  1. Claims validation & setting
-  2. Cookies validation & setting
-  3. Marshaling & Unmarshaling JSON
-  4. Other validations
-- Service: business logic specific to the domain
-  1. Core business logic
-  2. Ignorant of clientside interactions
-  3. Ignorant of database interactions
-- Repository: db actions specific to the domain
-  1. Database actions
+To Do: explain directories
 
 Common domain:
 
@@ -119,37 +96,17 @@ Common domain:
 Schema domain:
 
 - Contains database schema structs
-- Reason why they are not under specific domains is due to cyclical imports. To refactor later.
-  (I don't know an elegant solution to this problem. Would welcome advice.)
 
 ## Database
 
 - A local postgreSQL database included in docker-compose setup
-- startup/db.go will establish a connection on spin up, will panic if the connection fails
-- if using pgAdmin4 to connect to the local postgres container, use `host:localhost`
+- if using pgAdmin4 or datagrip to connect to the local postgres container, use `host:localhost`
 
 ---
 
 # API Documentation
 
-- library: [swaggo](https://github.com/swaggo/swag)
-- middleware: [echo swagger](https://github.com/swaggo/echo-swagger)
-- to access the swagger page:
-
-```
-http://localhost:3001/swagger
-```
-
-### Generate swagger documentation
-
-```
-cd server
-swag init
-```
-
-### Accessing swagger documentation
-
-[SWAGGER LINK](http://localhost:3001/swagger/index.html)
+Todo: document API routes
 
 ---
 

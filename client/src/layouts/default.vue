@@ -96,7 +96,7 @@ import { Icon } from '@iconify/vue';
 const showSidebar = ref(window.innerWidth >= 768);
 const sidebar = ref(null);
 const screenWidth = ref(window.innerWidth); // Reactive variable for screen width
-const showCompanySubmenu = ref(false);
+const showCompanySubmenu = ref(true);
 const companySubmenu = ref(null);
 const showUserSubmenu = ref(false);
 const userSubmenu = ref(null);
@@ -161,7 +161,7 @@ onMounted(() => {
         gsap.set(sidebar.value, { x: -sidebar.value.offsetWidth });
     }
     // Set initial height of the submenus
-    gsap.set(companySubmenu.value, { height: 0 });
+    gsap.set(companySubmenu.value, { height: 'auto' });
     gsap.set(userSubmenu.value, { height: 0 });
 });
 
