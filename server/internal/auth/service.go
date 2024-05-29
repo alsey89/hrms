@@ -9,7 +9,7 @@ import (
 
 // Search for user by email, compare password, and return user if successful.
 // If user is a manager, fetch location information.
-func (d *Domain) SignIn(email string, password string) (*schema.User, error) {
+func (d *Domain) SignInService(email string, password string) (*schema.User, error) {
 	db := d.params.Database.GetDB()
 
 	var user schema.User
@@ -46,7 +46,7 @@ func (d *Domain) SignIn(email string, password string) (*schema.User, error) {
 	return &user, nil
 }
 
-func (d *Domain) ConfirmEmail(userID uint, companyID uint) error {
+func (d *Domain) ConfirmEmailService(userID uint, companyID uint) error {
 	db := d.params.Database.GetDB()
 
 	//query user and mark as confirmed

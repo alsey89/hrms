@@ -28,7 +28,7 @@ func (d *Domain) SigninHandler(c echo.Context) error {
 	email := creds.Email
 	password := creds.Password
 
-	existingUser, err := d.SignIn(email, password)
+	existingUser, err := d.SignInService(email, password)
 	switch {
 	case err != nil:
 		d.logger.Error("[SigninHandler]", zap.Error(err))
@@ -56,25 +56,27 @@ func (d *Domain) SigninHandler(c echo.Context) error {
 		}
 	}
 
-	claims := Claims{
-		ID:        existingUser.ID,
-		CompanyID: existingUser.CompanyID,
-		Role:      existingUser.Role,
-		Email:     existingUser.Email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
-		},
+	claims := jwt.MapClaims{
+		"id":        existingUser.ID,
+		"companyId": existingUser.CompanyID,
+		"role":      existingUser.Role,
+		"email":     existingUser.Email,
 	}
-
 	// include location id for manager role
 	if existingUser.Role == "manager" {
-		claims.LocationID = &existingUser.UserPosition.Location.ID
+		claims["locationId"] = &existingUser.UserPosition.Location.ID
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	t, err := token.SignedString([]byte(viper.GetString("JWT_SECRET")))
+	t, err := d.params.JWT.GenerateToken("jwt_auth", claims)
 	if err != nil {
-		d.logger.Error("[SigninHandler] error signing jwt with claims", zap.Error(err))
+		d.logger.Error("[SigninHandler] error generating token", zap.Error(err))
+		return c.JSON(http.StatusInternalServerError, common.APIResponse{
+			Message: "something went wrong",
+			Data:    nil,
+		})
+	}
+	if t == nil {
+		d.logger.Error("[SigninHandler] token is nil")
 		return c.JSON(http.StatusInternalServerError, common.APIResponse{
 			Message: "something went wrong",
 			Data:    nil,
@@ -83,7 +85,7 @@ func (d *Domain) SigninHandler(c echo.Context) error {
 
 	cookie := new(http.Cookie)
 	cookie.Name = "jwt"
-	cookie.Value = t
+	cookie.Value = *t
 	cookie.HttpOnly = true
 	cookie.Secure = viper.GetBool("IS_PRODUCTION")
 	cookie.Path = "/"
@@ -115,26 +117,42 @@ func (d *Domain) SignoutHandler(c echo.Context) error {
 }
 
 func (d *Domain) ConfirmationHandler(c echo.Context) error {
-	token := c.QueryParam("token")
-	if token == "" {
-		d.logger.Error("[ConfirmationHandler] token is empty")
-		return c.JSON(http.StatusBadRequest, common.APIResponse{
-			Message: "token is empty",
+	// Assuming token has been validated by middleware and user set in context
+	user, ok := c.Get("user").(*jwt.Token)
+	// unexpected error
+	if !ok || user == nil {
+		return c.JSON(http.StatusUnauthorized, common.APIResponse{
+			Message: "something went wrong with token validation",
 			Data:    nil,
 		})
 	}
 
-	claims := &Claims{}
-	parsedClaims, err := d.ParseToken(token, claims)
-	if err != nil {
-		d.logger.Error("[ConfirmationHandler] error parsing token", zap.Error(err))
-		return c.JSON(http.StatusBadRequest, common.APIResponse{
-			Message: "invalid token",
+	claims, ok := user.Claims.(jwt.MapClaims)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, common.APIResponse{
+			Message: "error asserting claims",
 			Data:    nil,
 		})
 	}
 
-	err = d.ConfirmEmail(parsedClaims.ID, parsedClaims.CompanyID)
+	floatID, ok := claims["id"].(float64)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, common.APIResponse{
+			Message: "error asserting id",
+			Data:    nil,
+		})
+	}
+	floatCompanyID, ok := claims["companyId"].(float64)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, common.APIResponse{
+			Message: "error asserting company id",
+			Data:    nil,
+		})
+	}
+	uintID := uint(floatID)
+	uintCompanyID := uint(floatCompanyID)
+
+	err := d.ConfirmEmailService(uintID, uintCompanyID)
 	if err != nil {
 		d.logger.Error("[ConfirmationHandler]", zap.Error(err))
 		return c.JSON(http.StatusInternalServerError, common.APIResponse{
@@ -150,11 +168,20 @@ func (d *Domain) ConfirmationHandler(c echo.Context) error {
 }
 
 func (d *Domain) CheckAuth(c echo.Context) error {
-	_, ok := c.Get("user").(*jwt.Token) //echo jwt middleware handles missing/malformed token response
-	if !ok {
-		d.logger.Error("[CheckAuth] error getting user token")
+	// Assuming token has been validated by middleware and user set in context
+	user, ok := c.Get("user").(*jwt.Token)
+	// unexpected error
+	if !ok || user == nil {
 		return c.JSON(http.StatusUnauthorized, common.APIResponse{
-			Message: "token error",
+			Message: "something went wrong with token validation",
+			Data:    nil,
+		})
+	}
+
+	_, ok = user.Claims.(jwt.MapClaims)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, common.APIResponse{
+			Message: "error asserting claims",
 			Data:    nil,
 		})
 	}

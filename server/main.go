@@ -5,13 +5,13 @@ import (
 
 	config "github.com/alsey89/gogetter/config/viper"
 	postgres "github.com/alsey89/gogetter/database/postgres"
-	jwt "github.com/alsey89/gogetter/jwt/echo"
+	jwt "github.com/alsey89/gogetter/jwt"
 	logger "github.com/alsey89/gogetter/logging/zap"
-	mailer "github.com/alsey89/gogetter/mail/gomail"
+
+	// mailer "github.com/alsey89/gogetter/mail/gomail"
 	server "github.com/alsey89/gogetter/server/echo"
 
 	"github.com/alsey89/people-matter/internal/auth"
-	"github.com/alsey89/people-matter/internal/company"
 	"github.com/alsey89/people-matter/schema"
 )
 
@@ -48,14 +48,15 @@ func init() {
 		"mailer.app_password": "jmU7b5NxKr3Da75n",
 		"mailer.tls":          true,
 
-		"echo_jwt.signing_key":    "authsecret",
-		"echo_jwt.token_lookup":   "cookie:jwt",
-		"echo_jwt.signing_method": "HS256",
-		"echo_jwt.exp_in_hours":   72,
+		"jwt_auth.signing_key":    "authsecret",
+		"jwt_auth.token_lookup":   "cookie:jwt",
+		"jwt_auth.signing_method": "HS256",
+		"jwt_auth.exp_in_hours":   72,
 
-		"auth.signing_key":    "confirmationsecret",
-		"auth.signing_method": "HS256",
-		"auth.exp_in_hours":   1,
+		"jwt_email.signing_key":    "emailsecret",
+		"jwt_email.token_lookup":   "query:token",
+		"jwt_email.signing_method": "HS256",
+		"jwt_email.exp_in_hours":   1,
 	})
 }
 func main() {
@@ -81,14 +82,14 @@ func main() {
 			schema.Adjustments{},
 			schema.Document{},
 		),
-		jwt.InitiateModule("echo_jwt"),
-		mailer.InitiateModule("mailer"),
+		jwt.InitiateModule("jwt", "jwt_auth", "jwt_email"),
+		// mailer.InitiateModule("mailer"),
 
 		//-- Internal Domains Start --
 		auth.InitiateDomain("auth"),
-		company.InitiateDomain("company"),
+		// company.InitiateDomain("company"),
 		//-- Internal Domains End --
-		fx.NopLogger,
+		// fx.NopLogger,
 	)
 	app.Run()
 }

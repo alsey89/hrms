@@ -105,7 +105,7 @@ func (d *Domain) CreateCompanyHandler(c echo.Context) error {
 		"companyId": createdAdminUser.CompanyID,
 	}
 
-	token, err := d.params.Auth.GenerateToken(additionalClaims)
+	token, err := d.params.JWT.GenerateToken("jwt_email", additionalClaims)
 	if err != nil {
 		d.logger.Error("[CreateNewCompanyAndAdminUser]", zap.Error(err))
 	}

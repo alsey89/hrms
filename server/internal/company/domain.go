@@ -8,9 +8,9 @@ import (
 	"go.uber.org/zap"
 
 	postgres "github.com/alsey89/gogetter/database/postgres"
+	jwt "github.com/alsey89/gogetter/jwt"
 	mailer "github.com/alsey89/gogetter/mail/gomail"
 	server "github.com/alsey89/gogetter/server/echo"
-	"github.com/alsey89/people-matter/internal/auth"
 )
 
 type Domain struct {
@@ -29,7 +29,7 @@ type Params struct {
 	Mailer    *mailer.Module
 
 	// internal domains
-	Auth *auth.Domain
+	JWT jwt.Module
 }
 
 func InitiateDomain(scope string) fx.Option {

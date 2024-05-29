@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"time"
 
 	// "net/http"
 
@@ -11,8 +10,9 @@ import (
 	"go.uber.org/zap"
 
 	postgres "github.com/alsey89/gogetter/database/postgres"
+	jwt "github.com/alsey89/gogetter/jwt"
 	server "github.com/alsey89/gogetter/server/echo"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 )
 
@@ -43,6 +43,7 @@ type Params struct {
 	Logger    *zap.Logger
 	Server    *server.Module
 	Database  *postgres.Module
+	JWT       *jwt.Module
 }
 
 func InitiateDomain(scope string) fx.Option {
@@ -108,7 +109,8 @@ func (d *Domain) onStart(ctx context.Context) error {
 	authGroup.POST("/signin", d.SigninHandler)
 	authGroup.POST("/signout", d.SignoutHandler)
 
-	authGroup.GET("/check", d.CheckAuth)
+	authGroup.GET("/check", d.CheckAuth, d.GetAuthJWTMiddleware())
+	// authGroup.GET("/check", d.CheckAuth, d.params.JWT.Middleware())
 	authGroup.GET("/csrf", d.GetCSRFToken)
 
 	authGroup.GET("/confirmation", d.ConfirmationHandler)
@@ -132,41 +134,16 @@ func (m *Domain) PrintDebugLogs() {
 
 // ----------------------------------
 
-// generates a JWT token using config settings. additionalClaims can be passed in to add more claims to the token
-func (d *Domain) GenerateToken(additionalClaims jwt.MapClaims) (*string, error) {
-	claims := jwt.MapClaims{
-		"exp": jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(d.config.ExpInHours))),
-	}
-
-	for k, v := range additionalClaims {
-		claims[k] = v
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	t, err := token.SignedString([]byte(d.config.SigningKey))
+func (d *Domain) GetAuthJWTMiddleware() echo.MiddlewareFunc {
+	authConfig, err := d.params.JWT.GetConfig("jwt_auth")
 	if err != nil {
-		return nil, fmt.Errorf("[auth.GenerateToken]error signing jwt with claims: %w", err)
+		d.logger.Error("error getting jwt auth config", zap.Error(err))
 	}
 
-	return &t, nil
-}
-
-func (d *Domain) ParseToken(token string, claims jwt.Claims) (*Claims, error) {
-	t, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(d.config.SigningKey), nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("[auth.ParseToken]error parsing token: %w", err)
+	middleware := d.params.Server.GetEchoJWTMiddleware(authConfig.SigningKey, authConfig.SigningMethod, authConfig.TokenLookup)
+	if middleware == nil {
+		d.logger.Error("error getting jwt auth middleware")
 	}
 
-	if !t.Valid {
-		return nil, fmt.Errorf("[auth.ParseToken]invalid token")
-	}
-
-	parsedClaims, ok := t.Claims.(*Claims)
-	if !ok {
-		return nil, fmt.Errorf("[auth.ParseToken]error parsing claims")
-	}
-
-	return parsedClaims, nil
+	return *middleware
 }
