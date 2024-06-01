@@ -99,12 +99,12 @@ const originRoutes = [
       // },
     ],
   },
-  /* {
-      isActive: true,
-      path: '/:pathMatch(.*)*',
-      name: 'NotFound',
-      component: () => import('../pages/NotFound.vue')
-} */
+  {
+    isActive: true,
+    path: "/:pathMatch(.*)*",
+    name: "NotFound",
+    component: () => import("../pages/NotFound.vue"),
+  },
 ];
 
 export const filterByActive = () => {
