@@ -17,6 +17,7 @@
     "gsap": "^3.12.5",
     "lucide-vue-next": "^0.378.0",
     "pinia": "^2.1.7",
+    "posthog-js": "^1.136.2",
     "radix-vue": "^1.7.3",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",

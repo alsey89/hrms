@@ -9,6 +9,8 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 
+// import posthogPlugin from "./plugins/posthog";
+
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 (async () => {
@@ -21,6 +23,8 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
   app.use(pinia);
 
   app.use(autoAnimatePlugin);
+
+  // app.use(posthogPlugin);
 
   app.mount("#app");
 })();
