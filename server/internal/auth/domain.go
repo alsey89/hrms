@@ -9,17 +9,24 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	postgres "github.com/alsey89/gogetter/database/postgres"
-	jwt "github.com/alsey89/gogetter/jwt"
-	server "github.com/alsey89/gogetter/server/echo"
+	"github.com/alsey89/gogetter/pkg/jwt_manager"
+	"github.com/alsey89/gogetter/pkg/pg_connector"
+
+	"github.com/alsey89/gogetter/pkg/mailer"
+	"github.com/alsey89/gogetter/pkg/server"
+
+	jwtV5 "github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/viper"
 )
 
+// ----------------------------------
+
 const (
-	defaultSigningKey    = "othersecret"
-	defaultSigningMethod = "HS256"
-	defaultExpInHours    = 1
+	defaultJWTAuthScope  = "jwt_auth"
+	defaultJWTEmailScope = "jwt_email"
+	defaultJWTResetScope = "jwt_reset"
 )
 
 type Domain struct {
@@ -30,10 +37,9 @@ type Domain struct {
 }
 
 type Config struct {
-	SigningKey    string
-	TokenLookup   string
-	SigningMethod string
-	ExpInHours    int
+	JWTAuthScope  string
+	JWTEmailScope string
+	JWTResetScope string
 }
 
 type Params struct {
@@ -42,9 +48,12 @@ type Params struct {
 	Lifecycle fx.Lifecycle
 	Logger    *zap.Logger
 	Server    *server.Module
-	Database  *postgres.Module
-	JWT       *jwt.Module
+	Database  *pg_connector.Module
+	JWT       *jwt_manager.Module
+	Mailer    *mailer.Module
 }
+
+// ----------------------------------
 
 func InitiateDomain(scope string) fx.Option {
 
@@ -75,47 +84,18 @@ func InitiateDomain(scope string) fx.Option {
 			)
 		}),
 	)
-
-}
-
-func loadConfig(scope string) *Config {
-	getConfigPath := func(key string) string {
-		return fmt.Sprintf("%s.%s", scope, key)
-	}
-
-	//set defaults
-	viper.SetDefault(getConfigPath("signing_key"), defaultSigningKey)
-	viper.SetDefault(getConfigPath("signing_method"), defaultSigningMethod)
-	viper.SetDefault(getConfigPath("exp_in_hours"), defaultExpInHours)
-
-	return &Config{
-		SigningKey:    viper.GetString(getConfigPath("signing_key")),
-		SigningMethod: viper.GetString(getConfigPath("signing_method")),
-		ExpInHours:    viper.GetInt(getConfigPath("exp_in_hours")),
-	}
 }
 
 func (d *Domain) onStart(ctx context.Context) error {
 
 	d.logger.Info("Starting APIs")
 
-	// d.AddDefaultData(ctx)
+	err := d.loadRoutes()
+	if err != nil {
+		d.logger.Error("error loading routes", zap.Error(err))
+	}
 
-	// Router
-	server := d.params.Server.GetServer()
-	authGroup := server.Group("api/v1/auth")
-
-	// authGroup.POST("/signup", d.SignupHandler)
-	authGroup.POST("/signin", d.SigninHandler)
-	authGroup.POST("/signout", d.SignoutHandler)
-
-	authGroup.GET("/check", d.CheckAuth, d.GetAuthJWTMiddleware())
-	// authGroup.GET("/check", d.CheckAuth, d.params.JWT.Middleware())
-	authGroup.GET("/csrf", d.GetCSRFToken)
-
-	authGroup.GET("/confirmation", d.ConfirmationHandler)
-
-	d.PrintDebugLogs()
+	d.printDebugLogs()
 	return nil
 }
 
@@ -125,25 +105,89 @@ func (d *Domain) onStop(ctx context.Context) error {
 	return nil
 }
 
-func (m *Domain) PrintDebugLogs() {
+func loadConfig(scope string) *Config {
+	getConfigPath := func(key string) string {
+		return fmt.Sprintf("%s.%s", scope, key)
+	}
+
+	//set defaults
+	viper.SetDefault(getConfigPath("jwt_auth_scope"), defaultJWTAuthScope)
+	viper.SetDefault(getConfigPath("jwt_email_scope"), defaultJWTEmailScope)
+	viper.SetDefault(getConfigPath("jwt_reset_scope"), defaultJWTResetScope)
+
+	return &Config{
+		JWTAuthScope:  viper.GetString(getConfigPath("jwt_auth_scope")),
+		JWTEmailScope: viper.GetString(getConfigPath("jwt_email_scope")),
+		JWTResetScope: viper.GetString(getConfigPath("jwt_reset_scope")),
+	}
+}
+
+func (d *Domain) loadRoutes() error {
+	d.logger.Info("Loading Routes")
+
+	server := d.params.Server.GetServer()
+	authGroup := server.Group("api/v1/auth")
+
+	authGroup.POST("/signin", d.SigninHandler)
+	// authGroup.POST("/signup", d.SignupHandler)
+	authGroup.POST("/signout", d.SignoutHandler)
+
+	authGroup.GET("/confirmation", d.ConfirmationHandler)
+
+	authGroup.GET("/check", d.CheckAuth, d.mustBeLoggedIn())
+	authGroup.GET("/csrf", d.GetCSRFToken)
+
+	return nil
+}
+
+func (m *Domain) printDebugLogs() {
 	m.logger.Debug("----- Auth Domain Configuration -----")
-	m.logger.Debug("SigningKey", zap.Any("SigningKey", m.config.SigningKey))
-	m.logger.Debug("SigningMethod", zap.String("SigningMethod", m.config.SigningMethod))
-	m.logger.Debug("ExpInHours", zap.Int("ExpInHours", m.config.ExpInHours))
+	m.logger.Debug("JWT_Auth_Scope", zap.Any("JWT_Auth_Scope", m.config.JWTAuthScope))
+	m.logger.Debug("JWT_Email_Scope", zap.Any("JWT_Email_Scope", m.config.JWTEmailScope))
+	m.logger.Debug("JWT_Reset_Scope", zap.Any("JWT_Reset_Scope", m.config.JWTResetScope))
 }
 
 // ----------------------------------
 
-func (d *Domain) GetAuthJWTMiddleware() echo.MiddlewareFunc {
+func (d *Domain) mustBeLoggedIn() echo.MiddlewareFunc {
 	authConfig, err := d.params.JWT.GetConfig("jwt_auth")
 	if err != nil {
 		d.logger.Error("error getting jwt auth config", zap.Error(err))
+		return nil
 	}
 
-	middleware := d.params.Server.GetEchoJWTMiddleware(authConfig.SigningKey, authConfig.SigningMethod, authConfig.TokenLookup)
-	if middleware == nil {
-		d.logger.Error("error getting jwt auth middleware")
+	return echojwt.WithConfig(echojwt.Config{
+		SigningKey:    []byte(authConfig.SigningKey),
+		SigningMethod: authConfig.SigningMethod,
+		TokenLookup:   authConfig.TokenLookup,
+	})
+
+}
+
+// ----------------------------------
+
+func (d *Domain) SendConfirmationEmail(emailAddress string, userID uint, CompanyID uint) error {
+	//generate jwt token
+	additionalClaims := jwtV5.MapClaims{
+		"Id":        userID,
+		"companyId": CompanyID,
 	}
 
-	return *middleware
+	token, err := d.params.JWT.GenerateToken("jwt_email", additionalClaims)
+	if err != nil {
+		d.logger.Error("[CreateNewCompanyAndAdminUser]", zap.Error(err))
+	}
+
+	//send confirmation email
+	err = d.params.Mailer.SendTransactionalMail(
+		"hello@peoplematter.app",
+		emailAddress,
+		"Welcome to People Matter",
+		"<p>Welcome to People Matter</p><p>Your account has been created. Please click the link below to confirm your email address.</p><a href=\"http://localhost:3000/onboarding/confirmation?token="+*token+"\">Confirm Email</a>",
+	)
+	if err != nil {
+		return fmt.Errorf("[CreateNewCompanyAndAdminUser] Error sending confirmation email %w", err)
+	}
+
+	return nil
 }

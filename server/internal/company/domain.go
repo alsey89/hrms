@@ -7,10 +7,12 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	postgres "github.com/alsey89/gogetter/database/postgres"
-	jwt "github.com/alsey89/gogetter/jwt"
-	mailer "github.com/alsey89/gogetter/mail/gomail"
-	server "github.com/alsey89/gogetter/server/echo"
+	"github.com/alsey89/gogetter/pkg/pg_connector"
+
+	"github.com/alsey89/gogetter/pkg/mailer"
+	"github.com/alsey89/gogetter/pkg/server"
+
+	auth "github.com/alsey89/people-matter/internal/auth"
 )
 
 type Domain struct {
@@ -21,39 +23,40 @@ type Domain struct {
 
 type Params struct {
 	fx.In
-
 	Lifecycle fx.Lifecycle
-	Logger    *zap.Logger
-	Server    *server.Module
-	Database  *postgres.Module
-	Mailer    *mailer.Module
 
-	// internal domains
-	JWT jwt.Module
+	//Modules
+	Logger   *zap.Logger
+	Server   *server.Module
+	Database *pg_connector.Module
+	Mailer   *mailer.Module
+
+	//Internal Domains
+	Auth *auth.Domain
 }
 
 func InitiateDomain(scope string) fx.Option {
 
-	var c *Domain
+	var d *Domain
 
 	return fx.Options(
 		fx.Provide(func(p Params) *Domain {
 
-			c := &Domain{
+			d := &Domain{
 				params: p,
 				scope:  scope,
 				logger: p.Logger.Named("[" + scope + "]"),
 			}
 
-			return c
+			return d
 		}),
-		fx.Populate(&c),
+		fx.Populate(&d),
 		fx.Invoke(func(p Params) {
 
 			p.Lifecycle.Append(
 				fx.Hook{
-					OnStart: c.onStart,
-					OnStop:  c.onStop,
+					OnStart: d.onStart,
+					OnStop:  d.onStop,
 				},
 			)
 		}),
@@ -61,39 +64,39 @@ func InitiateDomain(scope string) fx.Option {
 
 }
 
-func (c *Domain) onStart(ctx context.Context) error {
+func (d *Domain) onStart(ctx context.Context) error {
 
-	c.logger.Info("Starting APIs")
+	d.logger.Info("Starting APIs")
 
 	// Router
-	server := c.params.Server.GetServer()
+	server := d.params.Server.GetServer()
 	companyGroup := server.Group("api/v1/company")
 
 	adminGroup := companyGroup.Group("/admin")
 
 	// Routes
-	companyGroup.GET("", c.GetCompanyHandler)
-	companyGroup.POST("", c.CreateCompanyHandler)
-	adminGroup.PUT("", c.UpdateCompanyHandler)
-	adminGroup.DELETE("", c.DeleteCompanyHandler)
+	companyGroup.GET("", d.GetCompanyHandler)
+	companyGroup.POST("", d.CreateCompanyHandler)
+	adminGroup.PUT("", d.UpdateCompanyHandler)
+	adminGroup.DELETE("", d.DeleteCompanyHandler)
 
-	adminGroup.POST("/department", c.CreateDepartmentHandler)
-	adminGroup.PUT("/department/:department_id", c.UpdateDepartmentHandler)
-	adminGroup.DELETE("/department/:department_id", c.DeleteDepartmentHandler)
+	adminGroup.POST("/department", d.CreateDepartmentHandler)
+	adminGroup.PUT("/department/:department_id", d.UpdateDepartmentHandler)
+	adminGroup.DELETE("/department/:department_id", d.DeleteDepartmentHandler)
 
-	adminGroup.POST("/location", c.CreateLocationHandler)
-	adminGroup.PUT("/location/:location_id", c.UpdateLocationHandler)
-	adminGroup.DELETE("/location/:location_id", c.DeleteLocationHandler)
+	adminGroup.POST("/location", d.CreateLocationHandler)
+	adminGroup.PUT("/location/:location_id", d.UpdateLocationHandler)
+	adminGroup.DELETE("/location/:location_id", d.DeleteLocationHandler)
 
-	adminGroup.POST("/position", c.CreatePositionHandler)
-	adminGroup.PUT("/position/:position_id", c.UpdatePositionHandler)
-	adminGroup.DELETE("/position/:position_id", c.DeletePositionHandler)
+	adminGroup.POST("/position", d.CreatePositionHandler)
+	adminGroup.PUT("/position/:position_id", d.UpdatePositionHandler)
+	adminGroup.DELETE("/position/:position_id", d.DeletePositionHandler)
 
 	return nil
 }
 
-func (c *Domain) onStop(ctx context.Context) error {
-	c.logger.Info("Stopped APIs")
+func (d *Domain) onStop(ctx context.Context) error {
+	d.logger.Info("Stopped APIs")
 
 	return nil
 }

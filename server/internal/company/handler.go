@@ -2,10 +2,8 @@ package company
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 
@@ -99,26 +97,13 @@ func (d *Domain) CreateCompanyHandler(c echo.Context) error {
 		})
 	}
 
-	//generate jwt token
-	additionalClaims := jwt.MapClaims{
-		"Id":        createdAdminUser.ID,
-		"companyId": createdAdminUser.CompanyID,
-	}
-
-	token, err := d.params.JWT.GenerateToken("jwt_email", additionalClaims)
+	err = d.params.Auth.SendConfirmationEmail(createdAdminUser.Email, createdAdminUser.ID, createdAdminUser.CompanyID)
 	if err != nil {
-		d.logger.Error("[CreateNewCompanyAndAdminUser]", zap.Error(err))
-	}
-
-	//send confirmation email
-	err = d.params.Mailer.SendTransactionalMail(
-		"hello@peoplematter.app",
-		form.AdminEmail,
-		"Welcome to People Matter",
-		"<p>Welcome to People Matter</p><p>Your account has been created. Please click the link below to confirm your email address.</p><a href=\"http://localhost:3000/onboarding/confirmation?token="+*token+"\">Confirm Email</a>",
-	)
-	if err != nil {
-		return fmt.Errorf("[CreateNewCompanyAndAdminUser] Error sending confirmation email %w", err)
+		d.logger.Error("[createCompanyHandler]", zap.Error(err))
+		return c.JSON(http.StatusInternalServerError, common.APIResponse{
+			Message: "error sending confirmation email",
+			Data:    nil,
+		})
 	}
 
 	return c.JSON(http.StatusOK, common.APIResponse{

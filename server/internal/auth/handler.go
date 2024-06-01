@@ -142,6 +142,7 @@ func (d *Domain) ConfirmationHandler(c echo.Context) error {
 			Data:    nil,
 		})
 	}
+
 	floatCompanyID, ok := claims["companyId"].(float64)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, common.APIResponse{
@@ -149,6 +150,7 @@ func (d *Domain) ConfirmationHandler(c echo.Context) error {
 			Data:    nil,
 		})
 	}
+
 	uintID := uint(floatID)
 	uintCompanyID := uint(floatCompanyID)
 

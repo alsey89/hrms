@@ -7,10 +7,12 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	postgres "github.com/alsey89/gogetter/database/postgres"
-	server "github.com/alsey89/gogetter/server/echo"
+	"github.com/alsey89/gogetter/pkg/pg_connector"
+	"github.com/alsey89/gogetter/pkg/server"
 	"github.com/alsey89/people-matter/internal/common"
 )
+
+// ----------------------------------
 
 type Domain struct {
 	params Params
@@ -24,8 +26,10 @@ type Params struct {
 	Lifecycle fx.Lifecycle
 	Logger    *zap.Logger
 	Server    *server.Module
-	Database  *postgres.Module
+	Database  *pg_connector.Module
 }
+
+// ----------------------------------
 
 func InitiateDomain(scope string) fx.Option {
 
@@ -97,3 +101,5 @@ func (d *Domain) onStop(ctx context.Context) error {
 
 	return nil
 }
+
+// ----------------------------------

@@ -23,6 +23,44 @@ const originRoutes = [
   },
   {
     isActive: true,
+    path: "/admin",
+    name: "AdminLayout",
+    component: () => import("../layouts/default.vue"),
+    children: [
+      {
+        isActive: true,
+        path: "",
+        name: "AdminDashboard",
+        component: () => import("../pages/admin/index.vue"),
+      },
+      {
+        isActive: true,
+        path: "company",
+        name: "AdminCompany",
+        component: () => import("../pages/admin/company.vue"),
+      },
+      {
+        isActive: true,
+        path: "locations",
+        name: "AdminLocation",
+        component: () => import("../pages/admin/location.vue"),
+      },
+      {
+        isActive: true,
+        path: "departments",
+        name: "AdminDepartment",
+        component: () => import("../pages/admin/department.vue"),
+      },
+      {
+        isActive: true,
+        path: "positions",
+        name: "AdminPosition",
+        component: () => import("../pages/admin/position.vue"),
+      },
+    ],
+  },
+  {
+    isActive: false,
     path: "/onboarding",
     name: "OnboardingLayout",
     component: () => import("../layouts/full-screen.vue"),

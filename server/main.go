@@ -3,25 +3,24 @@ package main
 import (
 	"go.uber.org/fx"
 
-	config "github.com/alsey89/gogetter/config/viper"
-	postgres "github.com/alsey89/gogetter/database/postgres"
-	jwt "github.com/alsey89/gogetter/jwt"
-	logger "github.com/alsey89/gogetter/logging/zap"
-
-	// mailer "github.com/alsey89/gogetter/mail/gomail"
-	server "github.com/alsey89/gogetter/server/echo"
+	"github.com/alsey89/gogetter/pkg/config_manager"
+	"github.com/alsey89/gogetter/pkg/jwt_manager"
+	"github.com/alsey89/gogetter/pkg/logger"
+	"github.com/alsey89/gogetter/pkg/mailer"
+	"github.com/alsey89/gogetter/pkg/pg_connector"
+	"github.com/alsey89/gogetter/pkg/server"
 
 	"github.com/alsey89/people-matter/internal/auth"
 	"github.com/alsey89/people-matter/schema"
 )
 
-var configuration *config.Module
+var config *config_manager.Module
 
 func init() {
-	config.SetSystemLogLevel("debug")
-	configuration = config.SetUpConfig("SERVER", "yaml")
+	config_manager.SetSystemLogLevel("debug")
+	config = config_manager.SetUpConfig("SERVER", "yaml")
 	//! CONFIG PRECEDENCE: ENV > CONFIG FILE > FALLBACK
-	configuration.SetFallbackConfigs(map[string]interface{}{
+	config.SetFallbackConfigs(map[string]interface{}{
 		"server.host":      "0.0.0.0",
 		"server.port":      3001,
 		"server.log_level": "DEV",
@@ -44,8 +43,8 @@ func init() {
 
 		"mailer.host":         "smtp.mailersend.net",
 		"mailer.port":         587,
-		"mailer.username":     "MS_ZsiAoC@peoplematter.app",
-		"mailer.app_password": "jmU7b5NxKr3Da75n",
+		"mailer.username":     "MS_Rf5egx@peoplematter.app",
+		"mailer.app_password": "ZishGZriU3z2KHPf",
 		"mailer.tls":          true,
 
 		"jwt_auth.signing_key":    "authsecret",
@@ -61,10 +60,10 @@ func init() {
 }
 func main() {
 	app := fx.New(
-		fx.Supply(configuration),
+		fx.Supply(config),
 		logger.InitiateModule(),
 		server.InitiateModule("server"),
-		postgres.InitiateModuleAndSchema(
+		pg_connector.InitiateModuleAndSchema(
 			"database",
 			// ...schema,
 			schema.Company{},
@@ -82,8 +81,8 @@ func main() {
 			schema.Adjustments{},
 			schema.Document{},
 		),
-		jwt.InitiateModule("jwt", "jwt_auth", "jwt_email"),
-		// mailer.InitiateModule("mailer"),
+		jwt_manager.InitiateModule("jwt", "jwt_auth", "jwt_email"),
+		mailer.InitiateModule("mailer"),
 
 		//-- Internal Domains Start --
 		auth.InitiateDomain("auth"),
