@@ -9,8 +9,8 @@
         <!-- sidebar -->
         <Sidebar :showSidebar="showSidebar" :isMobile="isMobile" />
         <!-- main content -->
-        <div :class="{ 'ml-[200px]': showSidebar && !isMobile, 'ml-0': !showSidebar || isMobile }"
-            class="w-full h-full overflow-y-scroll">
+        <div :class="{ 'ml-[250px]': showSidebar && !isMobile, 'ml-0': !showSidebar || isMobile }"
+            class="w-full h-full overflow-y-auto">
             <router-view></router-view>
         </div>
     </div>

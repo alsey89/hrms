@@ -15,23 +15,29 @@
                             <Icon icon="material-symbols:expand-more" />
                         </span>
                     </div>
-                    <router-link v-else :to="item.path"
-                        class="flex items-center p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent">
+                    <div v-else @click="navigateTo(item.path)" :class="['flex items-center p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent',
+                        item.path === $route.path ? 'border-primary/20 bg-gray-100' : '']">
                         <Icon :icon="item.icon" class="text-xl" />
                         <span class="ml-3">{{ item.name }}</span>
-                    </router-link>
-                    <ul ref="submenu" :class="{ 'hidden': !item.isOpen }" class="ml-8 overflow-hidden">
-                        <li v-for="child in item.children" :key="child.name"
-                            class="p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent">
-                            <router-link :to="child.path" class="flex items-center">
+                    </div>
+
+                    <ul ref="submenu" class="ml-8 overflow-hidden">
+                        <li @click="navigateTo(child.path)" v-for="child in item.children" :key="child.name" :class="['p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent',
+                            child.path === $route.path ? 'border-primary/20 bg-gray-100' : '']">
+                            <div class="flex items-center">
                                 <Icon :icon="child.icon" class="text-xl" />
                                 <span class="ml-2">{{ child.name }}</span>
-                            </router-link>
+                            </div>
                         </li>
                     </ul>
                 </li>
             </ul>
         </div>
+        <router-link to="/auth/signout"
+            class="flex items-center p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent">
+            <Icon icon="mdi:logout" class="text-xl" />
+            <span class="ml-3"> signout </span>
+        </router-link>
     </aside>
 </template>
 
@@ -39,11 +45,22 @@
 import { ref, watch, onMounted, nextTick } from 'vue';
 import { gsap } from 'gsap';
 import { Icon } from '@iconify/vue';
+import { useRouter } from 'vue-router';
 
 const props = defineProps({
     showSidebar: Boolean,
     isMobile: Boolean
 });
+
+const router = useRouter();
+const navigateTo = (path) => {
+    // Prevent navigating to the same route
+    //* currentRoute is a ref
+    if (router.currentRoute.value.path === path) {
+        return;
+    }
+    router.push(path);
+};
 
 const menuSections = ref([
     {
@@ -66,11 +83,11 @@ const menuSections = ref([
                 icon: 'material-symbols:policy',
                 isOpen: false,
                 children: [
-                    { name: 'Attendance', icon: 'material-symbols:punch-clock', path: '/admin/company' },
-                    { name: 'Leave', icon: 'material-symbols:sick', path: '/admin/locations' },
-                    { name: 'Salary', icon: 'material-symbols:payments', path: '/admin/departments' },
-                    { name: 'Claims', icon: 'material-symbols:money', path: '/admin/positions' },
-                    { name: 'Compliance', icon: 'octicon:law', path: '/admin/positions' },
+                    { name: 'Attendance', icon: 'material-symbols:punch-clock', path: '/admin/attendance' },
+                    { name: 'Leave', icon: 'material-symbols:sick', path: '/admin/leave' },
+                    { name: 'Salary', icon: 'material-symbols:payments', path: '/admin/salary' },
+                    { name: 'Claims', icon: 'material-symbols:money', path: '/admin/claims' },
+                    { name: 'Compliance', icon: 'octicon:law', path: '/admin/compliance' },
                 ]
             },
         ]
@@ -108,16 +125,34 @@ const menuSections = ref([
                 ]
             }
         ]
-    },
-    {
-        label: 'Settings',
-        items: [
-            { name: 'Settings', icon: 'mdi:cog', path: '/settings' },
-            { name: 'Help', icon: 'mdi:help-circle', path: '/help' },
-            { name: 'Logout', icon: 'mdi:logout', path: '/auth/signout' },
-        ]
     }
 ]);
+
+const submenu = ref([]);
+
+const toggle = (item, event) => {
+    if (!item.children) return;
+    item.isOpen = !item.isOpen;
+    const submenu = event.currentTarget.nextElementSibling;
+    if (item.isOpen) {
+        gsap.fromTo(submenu, { height: 0 }, { height: 'auto', duration: 0.5 });
+    } else {
+        gsap.to(submenu, { height: 0, duration: 0.5 });
+    }
+};
+
+const setInitialState = () => {
+    submenu.value.forEach((item, index) => {
+        if (!item.children) return;
+        if (item.isOpen) {
+            gsap.set(submenu.value[index], { height: 'auto' });
+        } else {
+            gsap.set(submenu.value[index], { height: 0 });
+        }
+    });
+};
+
+// ----------------- SIDEBAR -----------------
 
 const sidebar = ref(null);
 
@@ -127,29 +162,15 @@ const animateSidebar = async () => {
     gsap.to(sidebar.value, { x: props.showSidebar ? 0 : -sidebarWidth, duration: 0.5 });
 };
 
-const toggle = (item, event) => {
-    if (item.children) {
-        item.isOpen = !item.isOpen;
-        const submenu = event.currentTarget.nextElementSibling;
-        if (item.isOpen) {
-            gsap.fromTo(submenu, { height: 0 }, { height: 'auto', duration: 0.5 });
-        } else {
-            gsap.to(submenu, { height: 0, duration: 0.5 });
-        }
-    }
-};
-
 watch(() => props.showSidebar, () => {
     animateSidebar();
 });
 
-onMounted(() => {
+// ----------------- LIFECYCLE -----------------
+
+onMounted(async () => {
     animateSidebar();
+    await nextTick();
+    setInitialState();
 });
 </script>
-
-<style scoped>
-.hidden {
-    display: none;
-}
-</style>
