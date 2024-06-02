@@ -5,12 +5,12 @@
         <div v-for="section in menuSections" :key="section.label">
             <h2 class="text-xs text-gray-500 p-2 border-t">{{ section.label }}</h2>
             <ul class="py-2">
-                <li v-auto-animate v-for="item in section.items" :key="item.name" class="group">
-                    <div v-if="item.children" @click="toggle(item)"
+                <li v-for="item in section.items" :key="item.name" class="group">
+                    <div v-if="item.children" @click="toggle(item, $event)"
                         class="flex items-center p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent">
                         <Icon :icon="item.icon" class="text-xl" />
                         <span class="ml-3">{{ item.name }}</span>
-                        <span v-if="item.children" class="ml-auto transition-transform duration-200"
+                        <span class="ml-auto transition-transform duration-200"
                             :class="item.isOpen ? 'rotate-180' : ''">
                             <Icon icon="material-symbols:expand-more" />
                         </span>
@@ -20,7 +20,7 @@
                         <Icon :icon="item.icon" class="text-xl" />
                         <span class="ml-3">{{ item.name }}</span>
                     </router-link>
-                    <ul v-if="item.children && item.isOpen" class="ml-8">
+                    <ul ref="submenu" :class="{ 'hidden': !item.isOpen }" class="ml-8 overflow-hidden">
                         <li v-for="child in item.children" :key="child.name"
                             class="p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent">
                             <router-link :to="child.path" class="flex items-center">
@@ -127,9 +127,15 @@ const animateSidebar = async () => {
     gsap.to(sidebar.value, { x: props.showSidebar ? 0 : -sidebarWidth, duration: 0.5 });
 };
 
-const toggle = (item) => {
+const toggle = (item, event) => {
     if (item.children) {
         item.isOpen = !item.isOpen;
+        const submenu = event.currentTarget.nextElementSibling;
+        if (item.isOpen) {
+            gsap.fromTo(submenu, { height: 0 }, { height: 'auto', duration: 0.5 });
+        } else {
+            gsap.to(submenu, { height: 0, duration: 0.5 });
+        }
     }
 };
 
@@ -141,3 +147,9 @@ onMounted(() => {
     animateSidebar();
 });
 </script>
+
+<style scoped>
+.hidden {
+    display: none;
+}
+</style>
