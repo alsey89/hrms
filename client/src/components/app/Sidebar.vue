@@ -1,65 +1,50 @@
 <template>
-    <aside ref="sidebar" :class="{ 'w-3/4 z-50': isMobile, 'w-[250px]': !isMobile }"
-        class="fixed top-0 left-0 h-full select-none bg-background border-r-2 border-gray-300 overflow-y-auto">
-        <menu class="flex flex-col gap-2 p-4">
-            <div class="text-xl font-bold"> People Matter </div>
-            <hr class="border-b border-gray-300" />
-
-            <div v-for="(section, sectionIndex) in menuSections" :key="sectionIndex">
-                <div class="text-sm text-gray-500">{{ section.label }}</div>
-                <div v-for="(item, itemIndex) in section.items" :key="itemIndex">
-                    <div v-if="item.children" @click="toggleSubmenu(sectionIndex)"
-                        class="flex justify-between items-center gap-2 p-2 border-2 border-background rounded-md hover:border-accent hover:cursor-pointer">
-                        <div class="flex gap-2">
-                            <Icon :icon="item.icon" class="w-5 h-5" />
-                            <div>{{ item.name }}</div>
-                        </div>
-                        <Icon
-                            :icon="activeSubmenu[sectionIndex] ? 'material-symbols-light:keyboard-arrow-down' : 'material-symbols-light:keyboard-arrow-right'"
-                            class="w-5 h-5" />
+    <aside ref="sidebar"
+        :class="['fixed top-0 left-0 h-full flex flex-col px-2 gap-2 border-r-2 border-accent bg-background select-none', isMobile ? 'w-3/4' : 'w-[250px]', 'z-50']">
+        <h2 class="text-lg font-semibold px-4 py-2"> People Matter </h2>
+        <div v-for="section in menuSections" :key="section.label">
+            <h2 class="text-xs text-gray-500 p-2 border-t">{{ section.label }}</h2>
+            <ul class="py-2">
+                <li v-auto-animate v-for="item in section.items" :key="item.name" class="group">
+                    <div v-if="item.children" @click="toggle(item)"
+                        class="flex items-center p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent">
+                        <Icon :icon="item.icon" class="text-xl" />
+                        <span class="ml-3">{{ item.name }}</span>
+                        <span v-if="item.children" class="ml-auto transition-transform duration-200"
+                            :class="item.isOpen ? 'rotate-180' : ''">
+                            <Icon icon="material-symbols:expand-more" />
+                        </span>
                     </div>
-                    <div v-if="item.children" ref="submenus" class="flex flex-col gap-2 pl-2 overflow-hidden">
-                        <div v-for="(child, childIndex) in item.children" :key="childIndex"
-                            class="flex items-center gap-2 p-2 border-2 border-background rounded-md hover:border-accent hover:cursor-pointer">
-                            <Icon :icon="child.icon" class="w-5 h-5" />
-                            <div>{{ child.name }}</div>
-                        </div>
-                    </div>
-                    <div v-else
-                        class="flex items-center gap-2 p-2 border-2 border-background rounded-md hover:border-accent hover:cursor-pointer">
-                        <Icon :icon="item.icon" class="w-5 h-5" />
-                        <div>{{ item.name }}</div>
-                    </div>
-                </div>
-                <hr class="border-b border-gray-300 my-1" v-if="sectionIndex < menuSections.length - 1" />
-            </div>
-
-            <div
-                class="flex items-center gap-2 p-2 border-2 border-background rounded-md hover:border-accent hover:cursor-pointer">
-                <Icon icon="material-symbols:settings" class="w-5 h-5" />
-                <div>Settings</div>
-            </div>
-            <div
-                class="flex items-center gap-2 p-2 border-2 border-background rounded-md hover:border-accent hover:cursor-pointer">
-                <Icon icon="material-symbols:logout" class="w-5 h-5" />
-                <div>Sign Out</div>
-            </div>
-        </menu>
+                    <router-link v-else :to="item.path"
+                        class="flex items-center p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent">
+                        <Icon :icon="item.icon" class="text-xl" />
+                        <span class="ml-3">{{ item.name }}</span>
+                    </router-link>
+                    <ul v-if="item.children && item.isOpen" class="ml-8">
+                        <li v-for="child in item.children" :key="child.name"
+                            class="p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent">
+                            <router-link :to="child.path" class="flex items-center">
+                                <Icon :icon="child.icon" class="text-xl" />
+                                <span class="ml-2">{{ child.name }}</span>
+                            </router-link>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
     </aside>
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted, nextTick } from 'vue';
+import { ref, watch, onMounted, nextTick } from 'vue';
 import { gsap } from 'gsap';
 import { Icon } from '@iconify/vue';
-import { defineProps } from 'vue';
 
 const props = defineProps({
     showSidebar: Boolean,
     isMobile: Boolean
 });
 
-// Menu sections
 const menuSections = ref([
     {
         label: 'Administrator',
@@ -68,13 +53,26 @@ const menuSections = ref([
             {
                 name: 'Company',
                 icon: 'mdi:office-building',
+                isOpen: false,
                 children: [
                     { name: 'Profile', icon: 'ooui:view-details-ltr', path: '/admin/company' },
                     { name: 'Locations', icon: 'material-symbols:map', path: '/admin/locations' },
                     { name: 'Departments', icon: 'system-uicons:hierarchy', path: '/admin/departments' },
                     { name: 'Positions', icon: 'hugeicons:job-link', path: '/admin/positions' },
                 ]
-            }
+            },
+            {
+                name: 'Policies',
+                icon: 'material-symbols:policy',
+                isOpen: false,
+                children: [
+                    { name: 'Attendance', icon: 'material-symbols:punch-clock', path: '/admin/company' },
+                    { name: 'Leave', icon: 'material-symbols:sick', path: '/admin/locations' },
+                    { name: 'Salary', icon: 'material-symbols:payments', path: '/admin/departments' },
+                    { name: 'Claims', icon: 'material-symbols:money', path: '/admin/positions' },
+                    { name: 'Compliance', icon: 'octicon:law', path: '/admin/positions' },
+                ]
+            },
         ]
     },
     {
@@ -84,6 +82,7 @@ const menuSections = ref([
             {
                 name: 'Location',
                 icon: 'material-symbols:map',
+                isOpen: false,
                 children: [
                     { name: 'Users', icon: 'ph:user-list', path: '/manager/users' },
                     { name: 'Leave', icon: 'material-symbols:sick-outline', path: '/manager/leave' },
@@ -100,6 +99,7 @@ const menuSections = ref([
             {
                 name: 'User',
                 icon: 'material-symbols:frame-person-outline',
+                isOpen: false,
                 children: [
                     { name: 'Profile', icon: 'fluent:slide-text-person-16-filled', path: '/user/profile' },
                     { name: 'Leave', icon: 'material-symbols:sick-outline', path: '/user/leave' },
@@ -108,23 +108,17 @@ const menuSections = ref([
                 ]
             }
         ]
+    },
+    {
+        label: 'Settings',
+        items: [
+            { name: 'Settings', icon: 'mdi:cog', path: '/settings' },
+            { name: 'Help', icon: 'mdi:help-circle', path: '/help' },
+            { name: 'Logout', icon: 'mdi:logout', path: '/auth/signout' },
+        ]
     }
 ]);
 
-const activeSubmenu = reactive({});
-const submenus = ref([]);
-
-const toggleSubmenu = (sectionIndex) => {
-    activeSubmenu[sectionIndex] = !activeSubmenu[sectionIndex];
-};
-
-watch(() => activeSubmenu, () => {
-    submenus.value.forEach((submenu, index) => {
-        gsap.to(submenu, { height: activeSubmenu[index] ? 'auto' : 0, duration: 0.5 });
-    });
-}, { deep: true });
-
-// Sidebar animation
 const sidebar = ref(null);
 
 const animateSidebar = async () => {
@@ -133,14 +127,17 @@ const animateSidebar = async () => {
     gsap.to(sidebar.value, { x: props.showSidebar ? 0 : -sidebarWidth, duration: 0.5 });
 };
 
+const toggle = (item) => {
+    if (item.children) {
+        item.isOpen = !item.isOpen;
+    }
+};
+
 watch(() => props.showSidebar, () => {
     animateSidebar();
 });
 
 onMounted(() => {
     animateSidebar();
-    submenus.value.forEach(submenu => {
-        gsap.set(submenu, { height: 0 });
-    });
 });
 </script>
