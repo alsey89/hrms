@@ -24,7 +24,7 @@ type Company struct {
 
 type Department struct {
 	BaseModel
-	CompanyID uint `json:"company_id" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;not null"`
+	CompanyID uint `json:"companyId" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;not null"`
 	// ------------------------------------------------------------------------------------------------
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -33,7 +33,7 @@ type Department struct {
 
 type Location struct {
 	BaseModel
-	CompanyID uint `json:"company_id" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;not null"`
+	CompanyID uint `json:"companyId" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;not null"`
 	// ------------------------------------------------------------------------------------------------
 	Name         string `json:"name"`
 	IsHeadOffice bool   `json:"isHeadOffice"`

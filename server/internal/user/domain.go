@@ -9,7 +9,7 @@ import (
 
 	"github.com/alsey89/gogetter/pkg/pg_connector"
 	"github.com/alsey89/gogetter/pkg/server"
-	"github.com/alsey89/people-matter/internal/common"
+	"github.com/alsey89/people-matter/internal/middleware"
 )
 
 // ----------------------------------
@@ -72,7 +72,7 @@ func (d *Domain) onStart(ctx context.Context) error {
 
 	//Admin group, requires admin role
 	adminGroup := userGroup.Group("/admin")
-	adminGroup.Use(common.MustBeAdmin)
+	adminGroup.Use(middleware.MustBeAdmin)
 	adminGroup.GET("/", d.GetAllUsersHandler)
 	// adminGroup.GET("/:id", d.GetUserHandler)
 	// adminGroup.POST("/", d.CreateUserHandler)
@@ -81,7 +81,7 @@ func (d *Domain) onStart(ctx context.Context) error {
 
 	//Manager group, requires manager role or above
 	managerGroup := userGroup.Group("/manager")
-	managerGroup.Use(common.MustBeManager)
+	managerGroup.Use(middleware.MustBeManager)
 	//todo: add middleware to check if user is manager
 	managerGroup.GET("/", d.GetAllLocationUsersHandler)
 	// managerGroup.GET("/:user_id", d.GetLocationUserHandler)

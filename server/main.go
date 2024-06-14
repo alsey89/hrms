@@ -11,6 +11,7 @@ import (
 	"github.com/alsey89/gogetter/pkg/server"
 
 	"github.com/alsey89/people-matter/internal/auth"
+	"github.com/alsey89/people-matter/internal/company"
 	"github.com/alsey89/people-matter/schema"
 )
 
@@ -39,7 +40,7 @@ func init() {
 		"database.password":     "password",
 		"database.sslmode":      "prefer",
 		"databse.loglevel":      "error",
-		"database.auto_migrate": false,
+		"database.auto_migrate": true,
 
 		"mailer.host":         "smtp.mailersend.net",
 		"mailer.port":         587,
@@ -86,7 +87,7 @@ func main() {
 
 		//-- Internal Domains Start --
 		auth.InitiateDomain("auth"),
-		// company.InitiateDomain("company"),
+		company.InitiateDomain("company"),
 		//-- Internal Domains End --
 		// fx.NopLogger,
 	)

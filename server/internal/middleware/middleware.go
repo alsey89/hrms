@@ -1,9 +1,10 @@
-package common
+package middleware
 
 import (
 	"errors"
 	"net/http"
 
+	"github.com/alsey89/people-matter/internal/common"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
@@ -12,16 +13,16 @@ import (
 func MustBeAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// get user role from token
-		role, err := GetRoleFromToken(c)
+		role, err := getRoleFromToken(c)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, APIResponse{
+			return c.JSON(http.StatusInternalServerError, common.APIResponse{
 				Message: "error getting role from token",
 				Data:    nil,
 			})
 		}
 
 		if role != "admin" {
-			return c.JSON(http.StatusUnauthorized, APIResponse{
+			return c.JSON(http.StatusUnauthorized, common.APIResponse{
 				Message: "unauthorized",
 				Data:    nil,
 			})
@@ -35,16 +36,16 @@ func MustBeAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 func MustBeManager(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// get user role from token
-		role, err := GetRoleFromToken(c)
+		role, err := getRoleFromToken(c)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, APIResponse{
+			return c.JSON(http.StatusInternalServerError, common.APIResponse{
 				Message: "error getting role from token",
 				Data:    nil,
 			})
 		}
 
 		if role != "manager" && role != "admin" {
-			return c.JSON(http.StatusUnauthorized, APIResponse{
+			return c.JSON(http.StatusUnauthorized, common.APIResponse{
 				Message: "unauthorized",
 				Data:    nil,
 			})
@@ -54,7 +55,9 @@ func MustBeManager(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func GetRoleFromToken(c echo.Context) (string, error) {
+// ------------------------------
+
+func getRoleFromToken(c echo.Context) (string, error) {
 	user, ok := c.Get("user").(*jwt.Token)
 	if !ok {
 		return "", errors.New("[common.GetRoleFromToken] error getting user from token")
