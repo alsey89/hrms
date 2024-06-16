@@ -98,6 +98,27 @@ func GetCompanyIDFromToken(c echo.Context) (*uint, error) {
 	return &uintID, nil
 }
 
+func GetLocationIDFromToken(c echo.Context) (*uint, error) {
+	user, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return nil, fmt.Errorf("[common.GetLocationIDFromToken] error asserting token. It seems to be of type: %T", c.Get("user"))
+	}
+
+	claims, ok := user.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, fmt.Errorf("[common.GetLocationIDFromToken] error asserting claims: %v. It seems to be of type: %T", user.Claims, user.Claims)
+	}
+
+	ID, ok := claims["locationId"].(float64)
+	if !ok {
+		return nil, fmt.Errorf("[common.GetLocationIDFromToken] error asserting ID: %v. It seems to be of type: %T", claims["locationId"], claims["locationId"])
+	}
+
+	uintID := uint(ID)
+
+	return &uintID, nil
+}
+
 // get uint ID from URL parameter
 func GetIDFromParam(key string, c echo.Context) (*uint, error) {
 	value := c.Param(key)

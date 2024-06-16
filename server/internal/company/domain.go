@@ -99,7 +99,7 @@ func (d *Domain) registerRoutes() {
 		d.params.JWT.GetJWTMiddleware("jwt_auth"),
 		middleware.MustBeManager,
 	)
-	managerGroup.PUT("/department", d.UpdateDepartmentHandler)
+	managerGroup.PUT("/location/:locationId", d.ManagerUpdateLocationHandler)
 
 	// *ADMIN
 	// can view company information
@@ -116,13 +116,13 @@ func (d *Domain) registerRoutes() {
 
 	adminGroup.POST("/department", d.CreateDepartmentHandler)
 	adminGroup.PUT("/department/:department_id", d.UpdateDepartmentHandler)
-	adminGroup.DELETE("/department/:department_id", d.DeleteDepartmentHandler)
+	adminGroup.DELETE("/department/:departmentId", d.DeleteDepartmentHandler)
 
 	adminGroup.POST("/location", d.CreateLocationHandler)
-	adminGroup.PUT("/location/:location_id", d.UpdateLocationHandler)
-	adminGroup.DELETE("/location/:location_id", d.DeleteLocationHandler)
+	adminGroup.PUT("/location/:locationId", d.UpdateLocationHandler)
+	adminGroup.DELETE("/location/:locationId", d.DeleteLocationHandler)
 
 	adminGroup.POST("/position", d.CreatePositionHandler)
-	adminGroup.PUT("/position/:position_id", d.UpdatePositionHandler)
-	adminGroup.DELETE("/position/:position_id", d.DeletePositionHandler)
+	adminGroup.PUT("/position/:positionId", d.UpdatePositionHandler)
+	adminGroup.DELETE("/position/:positionId", d.DeletePositionHandler)
 }

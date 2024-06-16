@@ -35,7 +35,7 @@ type User struct {
 	ContactInfo      *ContactInfo      `json:"contactInfo"       gorm:"foreignKey:UserID"`
 	EmergencyContact *EmergencyContact `json:"emergencyContact"  gorm:"foreignKey:UserID"`
 	// ------------------------------------------------------------------------------------------------
-	UserPosition *UserPosition `json:"assignedJob" gorm:"foreignKey:UserID"`
+	UserPosition *UserPosition `json:"userPosition" gorm:"foreignKey:UserID"`
 	// ------------------------------------------------------------------------------------------------
 	SalaryID *uint      `json:"salaryId"  gorm:"foreignKey:UserID"`
 	Payments []*Payment `json:"payments" gorm:"foreignKey:UserID"`

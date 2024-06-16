@@ -17,7 +17,7 @@ type Company struct {
 	// ------------------------------------------------------------------------------------------------
 	Departments []Department `json:"departments" gorm:"foreignKey:CompanyID"`
 	Locations   []Location   `json:"locations" gorm:"foreignKey:CompanyID"`
-	Positions   []Position   `json:"jobs" gorm:"foreignKey:CompanyID"`
+	Positions   []Position   `json:"positions" gorm:"foreignKey:CompanyID"`
 	// ------------------------------------------------------------------------------------------------
 	CompanySize string `json:"companySize"`
 }

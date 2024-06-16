@@ -9,7 +9,7 @@ import (
 
 //! Company ------------------------------------------------------------
 
-// Create new company and admin user, send confirmation email
+// Creates new company and admin user
 func (d *Domain) CreateNewCompanyAndAdminUser(newCompanyForm *NewCompany) (*schema.User, error) {
 	db := d.params.Database.GetDB()
 
@@ -59,7 +59,7 @@ func (d *Domain) CreateNewCompanyAndAdminUser(newCompanyForm *NewCompany) (*sche
 	return &newAdminUser, nil
 }
 
-// Get company data without preloading
+// Get company data without preloading data
 func (d *Domain) GetCompany(companyID *uint) (*schema.Company, error) {
 	db := d.params.Database.GetDB()
 
@@ -73,7 +73,8 @@ func (d *Domain) GetCompany(companyID *uint) (*schema.Company, error) {
 	return &existingCompany, nil
 }
 
-// Get company data with preloading
+// Gets company data, preloads departments, locations, and positions.
+// Todo: benchmark and compare against joins
 func (d *Domain) GetCompanyWithDetails(companyID *uint) (*schema.Company, error) {
 	db := d.params.Database.GetDB()
 
@@ -91,7 +92,7 @@ func (d *Domain) GetCompanyWithDetails(companyID *uint) (*schema.Company, error)
 	return &existingCompany, nil
 }
 
-// Update company data
+// Updates company data, allows null values
 func (d *Domain) UpdateCompany(companyID *uint, newData *schema.Company) error {
 	db := d.params.Database.GetDB()
 
@@ -102,15 +103,19 @@ func (d *Domain) UpdateCompany(companyID *uint, newData *schema.Company) error {
 		"Website": newData.Website,
 		"Email":   newData.Email,
 
-		"Phone":      newData.Phone,
-		"Address":    newData.Address,
-		"City":       newData.City,
-		"State":      newData.State,
-		"Country":    newData.Country,
-		"PostalCode": newData.PostalCode,
+		"Phone":       newData.Phone,
+		"Address":     newData.Address,
+		"City":        newData.City,
+		"State":       newData.State,
+		"Country":     newData.Country,
+		"PostalCode":  newData.PostalCode,
+		"CompanySize": newData.CompanySize,
 	}
 
-	result := db.Model(&schema.Company{}).Where("id = ?", companyID).Updates(dataToUpdate)
+	result := db.
+		Model(&schema.Company{}).
+		Where("id = ?", companyID).
+		Updates(dataToUpdate)
 	if result.Error != nil {
 		return fmt.Errorf("[UpdateCompany] %w", result.Error)
 	}
@@ -130,8 +135,9 @@ func (d *Domain) DeleteCompany(companyID *uint) error {
 	return nil
 }
 
-// //! Department ------------------------------------------------------------
+//! Department ------------------------------------------------------------
 
+// Create new department
 func (d *Domain) CreateDepartment(newDepartment *schema.Department) error {
 	db := d.params.Database.GetDB()
 
@@ -143,6 +149,7 @@ func (d *Domain) CreateDepartment(newDepartment *schema.Department) error {
 	return nil
 }
 
+// Update department data, allows null values
 func (d *Domain) UpdateDepartment(companyID *uint, departmentID *uint, newData *schema.Department) error {
 	db := d.params.Database.GetDB()
 
@@ -178,6 +185,7 @@ func (d *Domain) DeleteDepartment(companyID *uint, departmentID *uint) error {
 
 //! Location ------------------------------------------------------------
 
+// Create new location
 func (d *Domain) CreateLocation(newLocation *schema.Location) error {
 	db := d.params.Database.GetDB()
 
@@ -189,6 +197,7 @@ func (d *Domain) CreateLocation(newLocation *schema.Location) error {
 	return nil
 }
 
+// Update all location data, allows null values
 func (d *Domain) UpdateLocation(companyID *uint, locationID *uint, newData *schema.Location) error {
 
 	db := d.params.Database.GetDB()
@@ -201,6 +210,31 @@ func (d *Domain) UpdateLocation(companyID *uint, locationID *uint, newData *sche
 		"State":        newData.State,
 		"Country":      newData.Country,
 		"PostalCode":   newData.PostalCode,
+	}
+
+	result := db.
+		Model(&schema.Location{}).
+		Where("company_id = ? AND id = ?", companyID, locationID).
+		Updates(dataToUpdate)
+	if result.Error != nil {
+		return fmt.Errorf("[UpdateLocation] %w", result.Error)
+	}
+
+	return nil
+}
+
+// Update location data, no HeadOffice value
+func (d *Domain) UpdateLocationNoHeadOffice(companyID *uint, locationID *uint, newData *schema.Location) error {
+
+	db := d.params.Database.GetDB()
+
+	dataToUpdate := map[string]interface{}{
+		"Name":       newData.Name,
+		"Address":    newData.Address,
+		"City":       newData.City,
+		"State":      newData.State,
+		"Country":    newData.Country,
+		"PostalCode": newData.PostalCode,
 	}
 
 	result := db.
@@ -245,7 +279,7 @@ func (d *Domain) UpdatePosition(companyID *uint, positionID *uint, newData *sche
 	db := d.params.Database.GetDB()
 
 	dataToUpdate := map[string]interface{}{
-		"Title":          newData.Title,
+		"Title":          newData.Name,
 		"Description":    newData.Description,
 		"Duties":         newData.Duties,
 		"Qualifications": newData.Qualifications,

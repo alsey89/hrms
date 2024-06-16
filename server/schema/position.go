@@ -8,7 +8,7 @@ type Position struct {
 	BaseModel
 	CompanyID uint `json:"company_id" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;not null"`
 	// ------------------------------------------------------------------------------------------------
-	Title          string `json:"title"`
+	Name           string `json:"name"`
 	Description    string `json:"description"`
 	Duties         string `json:"duties"`
 	Qualifications string `json:"qualifications"`
@@ -43,7 +43,7 @@ type UserPosition struct {
 	UserID uint `json:"userId"`
 
 	PositionID uint     `json:"positionId"`
-	Position   Position `json:"job" gorm:"foreignKey:PositionID"`
+	Position   Position `json:"position" gorm:"foreignKey:PositionID"`
 
 	LocationID uint     `json:"locationId"`
 	Location   Location `json:"location" gorm:"foreignKey:LocationID"`

@@ -7,6 +7,7 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
+	"github.com/alsey89/gogetter/pkg/jwt_manager"
 	"github.com/alsey89/gogetter/pkg/pg_connector"
 	"github.com/alsey89/gogetter/pkg/server"
 	"github.com/alsey89/people-matter/internal/middleware"
@@ -27,6 +28,7 @@ type Params struct {
 	Logger    *zap.Logger
 	Server    *server.Module
 	Database  *pg_connector.Module
+	JWT       *jwt_manager.Module
 }
 
 // ----------------------------------
@@ -63,35 +65,7 @@ func InitiateDomain(scope string) fx.Option {
 func (d *Domain) onStart(ctx context.Context) error {
 
 	d.logger.Info("Starting APIs")
-
-	// Router
-	server := d.params.Server.GetServer()
-	userGroup := server.Group("/user")
-
-	// Role Precedence: Admin > Manager > User
-
-	//Admin group, requires admin role
-	adminGroup := userGroup.Group("/admin")
-	adminGroup.Use(middleware.MustBeAdmin)
-	adminGroup.GET("/", d.GetAllUsersHandler)
-	// adminGroup.GET("/:id", d.GetUserHandler)
-	// adminGroup.POST("/", d.CreateUserHandler)
-	// adminGroup.PUT("/:id", d.UpdateUserHandler)
-	// adminGroup.DELETE("/:id", d.DeleteUserHandler)
-
-	//Manager group, requires manager role or above
-	managerGroup := userGroup.Group("/manager")
-	managerGroup.Use(middleware.MustBeManager)
-	//todo: add middleware to check if user is manager
-	managerGroup.GET("/", d.GetAllLocationUsersHandler)
-	// managerGroup.GET("/:user_id", d.GetLocationUserHandler)
-	// managerGroup.POST("/:user_id", d.CreateLocationUserHandler)
-	// managerGroup.PUT("/:user_id", d.UpdateLocationUserHandler)
-	// managerGroup.DELETE("/:user_id", d.DeleteLocationUserHandler)
-
-	//User
-	userGroup.GET("/me", d.GetCurrentUserHandler)
-	// userGroup.PUT("/me", d.UpdateCurrentUserHandler)
+	d.registerRoutes()
 
 	return nil
 }
@@ -100,6 +74,54 @@ func (d *Domain) onStop(ctx context.Context) error {
 	d.logger.Info("Stopped APIs")
 
 	return nil
+}
+
+func (d *Domain) registerRoutes() {
+	// Router
+	e := d.params.Server.GetServer()
+
+	// // *System
+	// // for creating and deleting companies
+	// systemGroup := e.Group(
+	// 	"api/v1/system/user",
+	// 	d.params.JWT.GetJWTMiddleware("jwt_auth"),
+	// )
+	// systemGroup.POST("", d.CreateRootUserHandler)
+	// systemGroup.DELETE("", d.DeleteRootUserHandler, middleware.MustBeAdmin)
+
+	// // *EMPLOYEE
+	// // can view their own user information
+	// employeeGroup := e.Group(
+	// 	"api/v1/user",
+	// 	d.params.JWT.GetJWTMiddleware("jwt_auth"),
+	// )
+	// employeeGroup.GET("", d.GetSelfDataHandler)
+	// employeeGroup.PUT("", d.UpdateSelfDataHandler)
+
+	// *MANAGER
+	// can view all users from their branch
+	// can update, delete user from their branch
+	// managerGroup := e.Group(
+	// 	"api/v1/manager/user",
+	// 	d.params.JWT.GetJWTMiddleware("jwt_auth"),
+	// 	middleware.MustBeManager,
+	// )
+	// managerGroup.GET("", d.GetAllLocationUsersHandler)
+	// managerGroup.POST("", d.CreateLocationUserHandler)
+	// managerGroup.PUT("/user/:userId", d.UpdateLocationUserHandler)
+	// managerGroup.DELETE("/user/:userId", d.DeleteLocationUserHandler)
+	// *ADMIN
+	// can view all users information
+	// can update, delete user from any branch
+	adminGroup := e.Group(
+		"api/v1/admin/user",
+		d.params.JWT.GetJWTMiddleware("jwt_auth"),
+		middleware.MustBeAdmin,
+	)
+	adminGroup.GET("", d.GetAllUsersHandler)
+	adminGroup.POST("", d.CreateUserHandler)
+	adminGroup.PUT("/:userId", d.UpdateUserHandler)
+	adminGroup.DELETE("/:userId", d.DeleteUserHandler)
 }
 
 // ----------------------------------

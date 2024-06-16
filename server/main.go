@@ -12,6 +12,7 @@ import (
 
 	"github.com/alsey89/people-matter/internal/auth"
 	"github.com/alsey89/people-matter/internal/company"
+	"github.com/alsey89/people-matter/internal/user"
 	"github.com/alsey89/people-matter/schema"
 )
 
@@ -40,7 +41,7 @@ func init() {
 		"database.password":     "password",
 		"database.sslmode":      "prefer",
 		"databse.loglevel":      "error",
-		"database.auto_migrate": true,
+		"database.auto_migrate": false,
 
 		"mailer.host":         "smtp.mailersend.net",
 		"mailer.port":         587,
@@ -88,6 +89,7 @@ func main() {
 		//-- Internal Domains Start --
 		auth.InitiateDomain("auth"),
 		company.InitiateDomain("company"),
+		user.InitiateDomain("user"),
 		//-- Internal Domains End --
 		// fx.NopLogger,
 	)
