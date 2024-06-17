@@ -1,4 +1,4 @@
-package user
+package position
 
 import (
 	"context"
@@ -80,48 +80,37 @@ func (d *Domain) registerRoutes() {
 	// Router
 	e := d.params.Server.GetServer()
 
-	// // *System
-	// // for creating and deleting companies
-	// systemGroup := e.Group(
-	// 	"api/v1/system/user",
-	// 	d.params.JWT.GetJWTMiddleware("jwt_auth"),
-	// )
-	// systemGroup.POST("", d.CreateRootUserHandler)
-	// systemGroup.DELETE("", d.DeleteRootUserHandler, middleware.MustBeAdmin)
-
-	// // *EMPLOYEE
-	// // can view their own user information
+	// *EMPLOYEE
+	// can view their own user position information
 	// employeeGroup := e.Group(
-	// 	"api/v1/user",
+	// 	"api/v1/position",
 	// 	d.params.JWT.GetJWTMiddleware("jwt_auth"),
 	// )
-	// employeeGroup.GET("", d.GetSelfDataHandler)
-	// employeeGroup.PUT("", d.UpdateSelfDataHandler)
+	// employeeGroup.GET("", d.GetSelfPositionHandler)
 
 	// *MANAGER
-	// can view all users from their branch
-	// can update, delete user from their branch
+	// can assign, reassign or dismiss users in their branch from their positions
 	// managerGroup := e.Group(
 	// 	"api/v1/manager/user",
 	// 	d.params.JWT.GetJWTMiddleware("jwt_auth"),
 	// 	middleware.MustBeManager,
 	// )
-	// managerGroup.GET("", d.GetAllLocationUsersHandler)
-	// managerGroup.POST("", d.CreateLocationUserHandler)
-	// managerGroup.PUT("/user/:userId", d.UpdateLocationUserHandler)
-	// managerGroup.DELETE("/user/:userId", d.DeleteLocationUserHandler)
+	// managerGroup.POST("/:userId/position", d.CreateUserPositionHandler)
+	// managerGroup.PUT("/:userId/position", d.UpdateUserPositionHandler)
+	// managerGroup.DELETE("/:userId/position", d.DeleteUserPositionHandler)
+
 	// *ADMIN
-	// can view all users information
-	// can update, delete user from any branch
+	// can assign, reassign or dismiss users from their positions
 	adminGroup := e.Group(
-		"api/v1/admin/user",
+		"api/v1/admin",
 		d.params.JWT.GetJWTMiddleware("jwt_auth"),
 		middleware.MustBeAdmin,
 	)
-	adminGroup.GET("", d.GetAllUsersHandler)
-	adminGroup.POST("", d.CreateUserHandler)
-	adminGroup.PUT("/:userId", d.UpdateUserHandler)
-	adminGroup.DELETE("/:userId", d.DeleteUserHandler)
+	// for selector options
+	adminGroup.GET("/position", d.GetAllPositionsHandler)
+	// for assignment
+	adminGroup.POST("/user/:userId/position", d.AssignPositionHandler)
+	adminGroup.DELETE("/user/:userId/position/:positionId", d.UnassignPositionHandler)
 }
 
 // ----------------------------------

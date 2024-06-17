@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/alsey89/people-matter/schema"
 )
@@ -14,7 +15,10 @@ func (d *Domain) GetAllUsers(companyID *uint) ([]schema.User, error) {
 
 	var users []schema.User
 
-	result := db.Where("company_id = ?", companyID).Find(&users)
+	result := db.
+		Preload("UserPositions", "end_date IS NULL OR end_date > ?", time.Now()). // Only get active user positions
+		Where("company_id = ?", companyID).
+		Find(&users)
 	if result.Error != nil {
 		return nil, fmt.Errorf("[GetAllUsers] %w", result.Error)
 	}
@@ -22,27 +26,26 @@ func (d *Domain) GetAllUsers(companyID *uint) ([]schema.User, error) {
 	return users, nil
 }
 
-// Get all users by location
-func (d *Domain) GetUsersByLocation(companyID *uint, locationID *uint) ([]schema.User, error) {
+// Get all users in company and location
+func (d *Domain) GetUsersByLocation(companyID, locationID *uint) ([]schema.User, error) {
 	db := d.params.Database.GetDB()
 
 	var users []schema.User
 
 	result := db.
-		Model(&schema.User{}).
-		Joins("UserPosition").
-		Joins("Location").
-		Where("users.company_id = ? AND locations.company_id =? AND locations.id = ?", companyID, companyID, locationID).
+		Joins("JOIN user_positions ON user_positions.user_id = users.id").
+		Where("users.company_id = ? AND user_positions.location_id = ?", companyID, locationID).
+		Preload("UserPositions", "location_id = ? AND (end_date IS NULL OR end_date > ?)", locationID, time.Now()).
 		Find(&users)
 	if result.Error != nil {
-		return nil, fmt.Errorf("[GetUsersByLocation] %w", result.Error)
+		return nil, fmt.Errorf("[GetAllUsers] %w", result.Error)
 	}
 
 	return users, nil
 }
 
 // Get a single user by ID
-func (d *Domain) GetUser(companyID *uint, userID *uint) (*schema.User, error) {
+func (d *Domain) GetUserByID(companyID *uint, userID *uint) (*schema.User, error) {
 	db := d.params.Database.GetDB()
 
 	var existingUser schema.User

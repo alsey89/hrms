@@ -17,10 +17,10 @@ const (
 
 type User struct {
 	BaseModel
-	CompanyID uint `json:"company_id" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;not null"`
+	CompanyID uint `json:"companyId" gorm:"uniqueIndex:company_id_email;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;not null"`
 	IsActive  bool `json:"isActive"     gorm:"default:false"`
 	// ------------------------------------------------------------------------------------------------
-	Email      string      `json:"email"      gorm:"uniqueIndex"`
+	Email      string      `json:"email"      gorm:"uniqueIndex:company_id_email;type:varchar(100);not null"`
 	Password   string      `json:"-"          gorm:"type:varchar(100)"` //* Password is not returned in JSON
 	AvatarURL  string      `json:"avatarUrl"  gorm:"type:text"`
 	Role       RoleEnum    `json:"role"       gorm:"default:'user'" sql:"type:ENUM('admin','manager','user')"`
@@ -35,13 +35,13 @@ type User struct {
 	ContactInfo      *ContactInfo      `json:"contactInfo"       gorm:"foreignKey:UserID"`
 	EmergencyContact *EmergencyContact `json:"emergencyContact"  gorm:"foreignKey:UserID"`
 	// ------------------------------------------------------------------------------------------------
-	UserPosition *UserPosition `json:"userPosition" gorm:"foreignKey:UserID"`
+	UserPositions []UserPosition `json:"userPositions" gorm:"foreignKey:UserID"`
 	// ------------------------------------------------------------------------------------------------
-	SalaryID *uint      `json:"salaryId"  gorm:"foreignKey:UserID"`
-	Payments []*Payment `json:"payments" gorm:"foreignKey:UserID"`
+	SalaryID *uint     `json:"salaryId"  gorm:"foreignKey:UserID"`
+	Payments []Payment `json:"payments" gorm:"foreignKey:UserID"`
 	// ------------------------------------------------------------------------------------------------
-	Leave      []*Leave      `json:"leave" gorm:"foreignKey:UserID"`
-	Attendance []*Attendance `json:"attendance" gorm:"foreignKey:UserID"`
+	Leave      []Leave      `json:"leave" gorm:"foreignKey:UserID"`
+	Attendance []Attendance `json:"attendance" gorm:"foreignKey:UserID"`
 	// ------------------------------------------------------------------------------------------------
 }
 

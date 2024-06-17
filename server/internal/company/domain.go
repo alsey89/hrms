@@ -11,7 +11,7 @@ import (
 	"github.com/alsey89/gogetter/pkg/pg_connector"
 	"github.com/alsey89/gogetter/pkg/server"
 	"github.com/alsey89/people-matter/internal/auth"
-	"github.com/alsey89/people-matter/internal/middleware"
+	"github.com/alsey89/people-matter/internal/common/middleware"
 )
 
 type Domain struct {

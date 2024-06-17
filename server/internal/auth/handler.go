@@ -62,10 +62,10 @@ func (d *Domain) SigninHandler(c echo.Context) error {
 		"role":      existingUser.Role,
 		"email":     existingUser.Email,
 	}
-	// include location id for manager role
-	if existingUser.Role == "manager" {
-		claims["locationId"] = &existingUser.UserPosition.Location.ID
-	}
+	// todo:include location id for manager role
+	// if existingUser.Role == "manager" {
+	// 	claims["locationId"] = &existingUser.UserPositions.Location.ID
+	// }
 
 	t, err := d.params.JWT.GenerateToken("jwt_auth", claims)
 	if err != nil {
