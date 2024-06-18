@@ -53,7 +53,7 @@ func (d *Domain) CreateCompanyHandler(c echo.Context) error {
 	}
 
 	// validate email
-	email := form.AdminEmail
+	email := form.RootUserEmail
 	if !common.EmailValidator(email) {
 		d.logger.Error("[signupHandler] email validation failed")
 		return c.JSON(http.StatusBadRequest, common.APIResponse{
@@ -83,7 +83,7 @@ func (d *Domain) CreateCompanyHandler(c echo.Context) error {
 		})
 	}
 
-	createdAdminUser, err := d.CreateNewCompanyAndAdminUser(form)
+	createdAdminUser, err := d.CreateNewCompanyAndRootUser(form)
 	if err != nil {
 		d.logger.Error("[createCompanyHandler]", zap.Error(err))
 		if errors.Is(err, ErrUserExists) {

@@ -6,7 +6,7 @@ import (
 
 type Position struct {
 	BaseModel
-	CompanyID uint `json:"company_id" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;not null"`
+	CompanyID uint `json:"company_id" gorm:"constraint:OnDelete:CASCADE;not null"`
 	// ------------------------------------------------------------------------------------------------
 	Name           string `json:"name"`
 	Description    string `json:"description"`
@@ -38,7 +38,7 @@ const (
 
 type UserPosition struct {
 	BaseModel
-	CompanyID uint `json:"company_id" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;not null"`
+	CompanyID uint `json:"company_id" gorm:"constraint:OnDelete:CASCADE;not null"`
 	// ------------------------------------------------------------------------------------------------
 	UserID uint `json:"userId"`
 

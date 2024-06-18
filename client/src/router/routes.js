@@ -61,7 +61,7 @@ const originRoutes = [
     ],
   },
   {
-    isActive: false,
+    isActive: true,
     path: "/onboarding",
     name: "OnboardingLayout",
     component: () => import("../layouts/full-screen.vue"),

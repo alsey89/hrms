@@ -8,13 +8,15 @@ import (
 )
 
 // Search for user by email, compare password, and return user if successful.
-// If user is a manager, fetch location information.
-func (d *Domain) SignInService(email string, password string) (*schema.User, error) {
+func (d *Domain) SignInService(companyId uint, email string, password string) (*schema.User, error) {
 	db := d.params.Database.GetDB()
 
 	var user schema.User
 
-	result := db.Where("email = ?", email).First(&user)
+	result := db.
+		Where("email = ? AND company_id =?", email, companyId).
+		Preload("Role").
+		First(&user)
 	if result.Error != nil {
 		return nil, fmt.Errorf("[SignIn] %w", result.Error)
 	}
@@ -29,18 +31,6 @@ func (d *Domain) SignInService(email string, password string) (*schema.User, err
 			return nil, fmt.Errorf("[SignIn]: %w", ErrInvalidCredentials)
 		}
 		return nil, fmt.Errorf("[SignIn]: %w", err)
-	}
-
-	// If user is a manager, fetch location information
-	if user.Role == "manager" {
-		result = db.
-			Joins("UserPosition").
-			Joins("Location").
-			Where("id = ?", user.ID).
-			Find(&user)
-		if result.Error != nil {
-			return nil, fmt.Errorf("[SignIn]: %w", result.Error)
-		}
 	}
 
 	return &user, nil

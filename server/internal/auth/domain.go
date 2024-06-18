@@ -90,7 +90,7 @@ func (d *Domain) onStart(ctx context.Context) error {
 
 	d.logger.Info("Starting APIs")
 
-	err := d.loadRoutes()
+	err := d.registerRoutes()
 	if err != nil {
 		d.logger.Error("error loading routes", zap.Error(err))
 	}
@@ -122,17 +122,20 @@ func loadConfig(scope string) *Config {
 	}
 }
 
-func (d *Domain) loadRoutes() error {
+func (d *Domain) registerRoutes() error {
 	d.logger.Info("Loading Routes")
 
-	server := d.params.Server.GetServer()
-	authGroup := server.Group("api/v1/auth")
+	e := d.params.Server.GetServer()
+	authGroup := e.Group("api/v1/auth")
 
 	authGroup.POST("/signin", d.SigninHandler)
 	// authGroup.POST("/signup", d.SignupHandler)
 	authGroup.POST("/signout", d.SignoutHandler)
 
-	authGroup.GET("/confirmation", d.ConfirmationHandler)
+	authGroup.GET("/confirmation",
+		d.ConfirmationHandler,
+		d.params.JWT.GetJWTMiddleware("jwt_email"),
+	)
 
 	authGroup.GET("/check", d.CheckAuth, d.mustBeLoggedIn())
 	authGroup.GET("/csrf", d.GetCSRFToken)
@@ -169,7 +172,7 @@ func (d *Domain) mustBeLoggedIn() echo.MiddlewareFunc {
 func (d *Domain) SendConfirmationEmail(emailAddress string, userID uint, CompanyID uint) error {
 	//generate jwt token
 	additionalClaims := jwtV5.MapClaims{
-		"Id":        userID,
+		"id":        userID,
 		"companyId": CompanyID,
 	}
 

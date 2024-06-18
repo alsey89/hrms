@@ -1,38 +1,37 @@
 package company
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/alsey89/people-matter/schema"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 //! Company ------------------------------------------------------------
 
 // Creates new company and admin user
-func (d *Domain) CreateNewCompanyAndAdminUser(newCompanyForm *NewCompany) (*schema.User, error) {
+func (d *Domain) CreateNewCompanyAndRootUser(incomingData *NewCompany) (*schema.User, error) {
 	db := d.params.Database.GetDB()
 
-	// terminate if user already exists
-	var existingUser schema.User
-	if db.Where("email = ?", newCompanyForm.AdminEmail).First(&existingUser).Error == nil {
-		return nil, ErrUserExists
-	}
-
+	// Create company
 	newCompany := schema.Company{
-		Name:        newCompanyForm.CompanyName,
-		CompanySize: newCompanyForm.CompanySize,
+		Name:        incomingData.CompanyName,
+		CompanySize: incomingData.CompanySize,
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newCompanyForm.Password), bcrypt.DefaultCost)
+	// Hash the admin password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(incomingData.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("[CreateNewCompanyAndAdminUser] Error hashing password: %w", err)
 	}
 
+	// Create admin user
 	newAdminUser := schema.User{
-		Email:    newCompanyForm.AdminEmail,
-		Role:     "admin",
+		Email:    incomingData.RootUserEmail,
 		Password: string(hashedPassword),
+		IsActive: false,
 	}
 
 	// *----- Transaction Start -----
@@ -47,10 +46,35 @@ func (d *Domain) CreateNewCompanyAndAdminUser(newCompanyForm *NewCompany) (*sche
 	// Assign company ID to the new admin user
 	newAdminUser.CompanyID = newCompany.ID
 
+	// Create admin role if it doesn't exist
+	var adminRole schema.Role
+	err = tx.
+		Where("level = ? AND company_id = ?", "root", newCompany.ID).
+		First(&adminRole).
+		Error
+	//* create admin role if it doesn't exist
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		adminRole = schema.Role{
+			CompanyID:   newCompany.ID,
+			Level:       "admin",
+			Description: "Administrator with full access to the company resources",
+		}
+		if err := tx.Create(&adminRole).Error; err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("[CreateNewCompanyAndAdminUser] Error creating admin role: %w", err)
+		}
+	}
+
 	// Create user
 	if err := tx.Create(&newAdminUser).Error; err != nil {
 		tx.Rollback()
 		return nil, fmt.Errorf("[CreateNewCompanyAndAdminUser] Error creating user: %w", err)
+	}
+
+	// Assign admin role to the admin user
+	if err := tx.Model(&newAdminUser).Association("Role").Append(&adminRole); err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("[CreateNewCompanyAndAdminUser] Error assigning admin role to user: %w", err)
 	}
 
 	tx.Commit()

@@ -27,8 +27,9 @@ func (d *Domain) SigninHandler(c echo.Context) error {
 
 	email := creds.Email
 	password := creds.Password
+	companyId := creds.CompanyID
 
-	existingUser, err := d.SignInService(email, password)
+	existingUser, err := d.SignInService(companyId, email, password)
 	switch {
 	case err != nil:
 		d.logger.Error("[SigninHandler]", zap.Error(err))
@@ -57,15 +58,12 @@ func (d *Domain) SigninHandler(c echo.Context) error {
 	}
 
 	claims := jwt.MapClaims{
-		"id":        existingUser.ID,
-		"companyId": existingUser.CompanyID,
-		"role":      existingUser.Role,
-		"email":     existingUser.Email,
+		"id":         existingUser.ID,
+		"companyId":  existingUser.CompanyID,
+		"email":      existingUser.Email,
+		"level":      existingUser.Role.Level,
+		"locationId": existingUser.Role.LocationID,
 	}
-	// todo:include location id for manager role
-	// if existingUser.Role == "manager" {
-	// 	claims["locationId"] = &existingUser.UserPositions.Location.ID
-	// }
 
 	t, err := d.params.JWT.GenerateToken("jwt_auth", claims)
 	if err != nil {
