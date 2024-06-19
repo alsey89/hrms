@@ -5,6 +5,7 @@ import posthog from "posthog-js";
 
 export const useUserStore = defineStore("user-store", {
   state: () => ({
+    companies: [],
     userId: "",
     email: "",
     error: "",
@@ -47,21 +48,17 @@ export const useUserStore = defineStore("user-store", {
         throw error;
       }
     },
-    async signin(payload) {
+    async signin(payload, router) {
       this.error = "";
-
       let data = {
         email: payload.email,
         password: payload.password,
       };
-
       try {
         const response = await api.post("/auth/signin", data);
         if (response.status >= 200 && response.status < 300) {
-          this.userId = response.data.data.id;
-          this.email = response.data.data.email;
-          posthog.identify(response.data.data.email);
-          return true;
+          this.companies = response.data.data;
+          router.push(`select-company?email=${payload.email}`);
         } else {
           return false;
         }
@@ -81,6 +78,43 @@ export const useUserStore = defineStore("user-store", {
         }
         throw error;
       }
+    },
+    async getJwt(companyId, email, router) {
+      this.error = "";
+      let data = {
+        companyId: companyId,
+        email: email,
+      };
+      try {
+        const response = await api.post("/auth/signin/token", data);
+        if (response.status >= 200 && response.status < 300) {
+          this.userId = response.data.data.id;
+          this.email = response.data.data.email;
+          posthog.identify(response.data.data.email);
+          router.push("/");
+        }
+      } catch (error) {
+        switch (error.response?.status) {
+          case 401:
+          case 404:
+            this.error = "Invalid email or password. Please try again.";
+            break;
+          case 403:
+            this.error = "Please verify your email address.";
+            break;
+          default:
+            this.error =
+              "Something went wrong. Please try again or contact support.";
+            break;
+        }
+        throw error;
+      }
+    },
+    async signout(router) {
+      this.userId = "";
+      this.email = "";
+      posthog.reset();
+      router.push("/auth/signin");
     },
     async getCsrfToken() {
       try {

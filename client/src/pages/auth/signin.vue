@@ -1,6 +1,6 @@
 <template>
-    <div class="w-full">
-        <Card class="w-[400px] md:w-[480px]">
+    <div v-auto-animate class="w-full">
+        <Card v-if="showCard" class="w-[400px] md:w-[480px]">
             <form @submit.prevent="submitForm" v-auto-animate class="flex flex-col gap-4 p-4">
                 <!-- Error -->
                 <section v-if="userStore.getError">
@@ -15,7 +15,6 @@
                         class="appearance-none border-2 border-secondary w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:border-ring"
                         :disabled="form.submitting">
                 </div>
-
                 <!-- password -->
                 <div v-auto-animate>
                     <label for="password">Password</label>
@@ -24,7 +23,6 @@
                         class="appearance-none border-2 border-secondary w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:border-ring"
                         :disabled="form.submitting">
                 </div>
-
                 <!-- submit -->
                 <Button v-auto-animate>
                     <Icon v-if="form.submitting" icon="svg-spinners:6-dots-rotate" class="h-6 w-6" />
@@ -36,7 +34,7 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import { onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -55,6 +53,7 @@ const form = reactive({
     passwordErr: '',
     submitting: false,
 });
+const showCard = ref(false);
 
 const submitForm = async () => {
     form.submitting = true;
@@ -68,10 +67,10 @@ const submitForm = async () => {
     }
 
     try {
-        const success = await userStore.signin(form);
+        const success = await userStore.signin(form, router);
         if (success) {
             form.submitting = false;
-            router.push('/');
+            router.push('select-company');
         }
     } catch (error) {
         console.error(error);
@@ -89,11 +88,8 @@ const validateEmail = (email) => {
     return true;
 };
 
-onBeforeMount(() => {
-    try {
-        userStore.getCsrfToken();
-    } catch (error) {
-        console.error(error);
-    }
+onMounted(() => {
+    userStore.getCsrfToken();
+    showCard.value = true;
 });
 </script>

@@ -11,8 +11,9 @@ import (
 
 //! Company ------------------------------------------------------------
 
-// Creates new company and admin user
-func (d *Domain) CreateNewCompanyAndRootUser(incomingData *NewCompany) (*schema.User, error) {
+// Creates new company, new root user, and create root role if it doesn't exist
+// assigns root role and company to the new root user
+func (d *Domain) CreateNewCompanyAndRootUser(incomingData *NewCompany) (*uint, *schema.User, error) {
 	db := d.params.Database.GetDB()
 
 	// Create company
@@ -21,14 +22,14 @@ func (d *Domain) CreateNewCompanyAndRootUser(incomingData *NewCompany) (*schema.
 		CompanySize: incomingData.CompanySize,
 	}
 
-	// Hash the admin password
+	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(incomingData.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, fmt.Errorf("[CreateNewCompanyAndAdminUser] Error hashing password: %w", err)
+		return nil, nil, fmt.Errorf("[CreateNewCompanyAndRootUser] Error hashing password: %w", err)
 	}
 
-	// Create admin user
-	newAdminUser := schema.User{
+	// Create root user
+	newRootUser := schema.User{
 		Email:    incomingData.RootUserEmail,
 		Password: string(hashedPassword),
 		IsActive: false,
@@ -40,47 +41,52 @@ func (d *Domain) CreateNewCompanyAndRootUser(incomingData *NewCompany) (*schema.
 	// Create company
 	if err := tx.Create(&newCompany).Error; err != nil {
 		tx.Rollback()
-		return nil, fmt.Errorf("[CreateNewCompanyAndAdminUser] Error creating company: %w", err)
+		return nil, nil, fmt.Errorf("[CreateNewCompanyAndRootUser] Error creating company: %w", err)
 	}
 
-	// Assign company ID to the new admin user
-	newAdminUser.CompanyID = newCompany.ID
-
-	// Create admin role if it doesn't exist
-	var adminRole schema.Role
+	//* Create root role if it doesn't exist
+	var rootRole schema.Role
 	err = tx.
 		Where("level = ? AND company_id = ?", "root", newCompany.ID).
-		First(&adminRole).
+		First(&rootRole).
 		Error
-	//* create admin role if it doesn't exist
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		adminRole = schema.Role{
+		rootRole = schema.Role{
 			CompanyID:   newCompany.ID,
-			Level:       "admin",
-			Description: "Administrator with full access to the company resources",
+			Level:       "root",
+			Description: "Root User with full access to the company resources",
 		}
-		if err := tx.Create(&adminRole).Error; err != nil {
+		if err := tx.Create(&rootRole).Error; err != nil {
 			tx.Rollback()
-			return nil, fmt.Errorf("[CreateNewCompanyAndAdminUser] Error creating admin role: %w", err)
+			return nil, nil, fmt.Errorf("[CreateNewCompanyAndRootUser] Error creating admin role: %w", err)
 		}
 	}
 
 	// Create user
-	if err := tx.Create(&newAdminUser).Error; err != nil {
+	err = tx.Create(&newRootUser).Error
+	if err != nil {
 		tx.Rollback()
-		return nil, fmt.Errorf("[CreateNewCompanyAndAdminUser] Error creating user: %w", err)
+		return nil, nil, fmt.Errorf("[CreateNewCompanyAndRootUser] Error creating user: %w", err)
 	}
 
-	// Assign admin role to the admin user
-	if err := tx.Model(&newAdminUser).Association("Role").Append(&adminRole); err != nil {
+	// Assign root role to the root user
+	err = tx.Model(&newRootUser).Association("Role").Append(&rootRole)
+	if err != nil {
 		tx.Rollback()
-		return nil, fmt.Errorf("[CreateNewCompanyAndAdminUser] Error assigning admin role to user: %w", err)
+		return nil, nil, fmt.Errorf("[CreateNewCompanyAndRootUser] Error assigning root role to user: %w", err)
+	}
+
+	// Assign the new company to the new root user
+	err = tx.Model(&newRootUser).Association("Companies").Append(&newCompany)
+	if err != nil {
+		tx.Rollback()
+		return nil, nil, fmt.Errorf("[CreateNewCompanyAndRootUser] Error assigning company to user: %w", err)
 	}
 
 	tx.Commit()
 	// *----- Transaction End -----
 
-	return &newAdminUser, nil
+	return &newCompany.ID, &newRootUser, nil
 }
 
 // Get company data without preloading data

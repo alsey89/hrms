@@ -63,13 +63,34 @@ func (d *Domain) GetUserByID(companyID *uint, userID *uint) (*schema.User, error
 }
 
 // Create new user
-func (d *Domain) CreateUser(newUser *schema.User) error {
+func (d *Domain) CreateUser(companyID *uint, newUser *schema.User) error {
 	db := d.params.Database.GetDB()
 
-	result := db.Create(newUser)
-	if result.Error != nil {
-		return fmt.Errorf("[CreateUser] %w", result.Error)
+	var company schema.Company
+	err := db.First(&company, companyID).Error
+	if err != nil {
+		return fmt.Errorf("[CreateUser] Error finding company: %w", err)
 	}
+
+	//*start transaction ------
+	tx := db.Begin()
+
+	//create the user
+	err = tx.Create(newUser).Error
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("[CreateUser] Error creating user: %w", err)
+	}
+
+	// associate the user with company
+	err = tx.Model(newUser).Association("Companies").Append(&company)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("[CreateUser] Error associating user with company: %w", err)
+	}
+
+	tx.Commit()
+	//*end transaction ------
 
 	return nil
 }

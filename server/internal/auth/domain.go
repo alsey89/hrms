@@ -128,7 +128,8 @@ func (d *Domain) registerRoutes() error {
 	e := d.params.Server.GetServer()
 	authGroup := e.Group("api/v1/auth")
 
-	authGroup.POST("/signin", d.SigninHandler)
+	authGroup.POST("/signin", d.AuthenticateUserHandler)
+	authGroup.POST("/signin/token", d.GenerateTokenHandler)
 	// authGroup.POST("/signup", d.SignupHandler)
 	authGroup.POST("/signout", d.SignoutHandler)
 

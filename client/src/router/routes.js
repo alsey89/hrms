@@ -92,12 +92,24 @@ const originRoutes = [
         name: "SignIn",
         component: () => import("@/pages/auth/Signin.vue"),
       },
+      {
+        isActive: true,
+        path: "select-company",
+        name: "SelectCompany",
+        component: () => import("@/pages/auth/SelectCompany.vue"),
+      },
       // {
       //   isActive: false,
       //   path: "signup",
       //   name: "SignUp",
       //   component: () => import("@/pages/auth/signup.vue"),
       // },
+      {
+        isActive: true,
+        path: "signout",
+        name: "SignOut",
+        component: () => import("@/pages/auth/Signout.vue"),
+      },
     ],
   },
   {

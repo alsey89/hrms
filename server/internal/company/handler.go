@@ -83,7 +83,7 @@ func (d *Domain) CreateCompanyHandler(c echo.Context) error {
 		})
 	}
 
-	createdAdminUser, err := d.CreateNewCompanyAndRootUser(form)
+	createdCompanyID, createdAdminUser, err := d.CreateNewCompanyAndRootUser(form)
 	if err != nil {
 		d.logger.Error("[createCompanyHandler]", zap.Error(err))
 		if errors.Is(err, ErrUserExists) {
@@ -97,8 +97,15 @@ func (d *Domain) CreateCompanyHandler(c echo.Context) error {
 			Data:    nil,
 		})
 	}
+	if createdCompanyID == nil {
+		d.logger.Error("[createCompanyHandler] created company id is nil")
+		return c.JSON(http.StatusInternalServerError, common.APIResponse{
+			Message: "error creating company and admin user",
+			Data:    nil,
+		})
+	}
 
-	err = d.params.Auth.SendConfirmationEmail(createdAdminUser.Email, createdAdminUser.ID, createdAdminUser.CompanyID)
+	err = d.params.Auth.SendConfirmationEmail(createdAdminUser.Email, createdAdminUser.ID, *createdCompanyID)
 	if err != nil {
 		d.logger.Error("[createCompanyHandler]", zap.Error(err))
 		return c.JSON(http.StatusInternalServerError, common.APIResponse{

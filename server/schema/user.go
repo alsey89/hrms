@@ -8,13 +8,13 @@ import (
 
 type User struct {
 	BaseModel
-	CompanyID uint `json:"companyId" gorm:"uniqueIndex:idx_company_id_email;constraint:OnDelete:CASCADE;not null"`
-	IsActive  bool `json:"isActive"     gorm:"default:false"`
+	Companies []Company `json:"companies" gorm:"many2many:user_companies;"`
+	IsActive  bool      `json:"isActive"     gorm:"default:false"`
 	// ------------------------------------------------------------------------------------------------
 	RoleID *uint `json:"roleId" gorm:"constraint:OnDelete:NULL"`
 	Role   *Role `json:"role" gor:"foreignKey:RoleID"`
 	// ------------------------------------------------------------------------------------------------
-	Email      string      `json:"email"      gorm:"uniqueIndex:idx_company_id_email;type:varchar(100);not null"`
+	Email      string      `json:"email" gorm:"unique;type:varchar(100);not null"`
 	Password   string      `json:"-"          gorm:"type:varchar(100)"` //* Password is not returned in JSON
 	AvatarURL  string      `json:"avatarUrl"  gorm:"type:text"`
 	LastLogin  *time.Time  `json:"lastLogin"  gorm:"default:null"`
