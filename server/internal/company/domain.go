@@ -115,7 +115,7 @@ func (d *Domain) registerRoutes() {
 	adminGroup.PUT("", d.UpdateCompanyHandler)
 
 	adminGroup.POST("/department", d.CreateDepartmentHandler)
-	adminGroup.PUT("/department/:department_id", d.UpdateDepartmentHandler)
+	adminGroup.PUT("/department/:departmentId", d.UpdateDepartmentHandler)
 	adminGroup.DELETE("/department/:departmentId", d.DeleteDepartmentHandler)
 
 	adminGroup.POST("/location", d.CreateLocationHandler)

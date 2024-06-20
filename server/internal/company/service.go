@@ -3,6 +3,7 @@ package company
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/alsey89/people-matter/schema"
 	"golang.org/x/crypto/bcrypt"
@@ -229,12 +230,13 @@ func (d *Domain) CreateLocation(newLocation *schema.Location) error {
 
 // Update all location data, allows null values
 func (d *Domain) UpdateLocation(companyID *uint, locationID *uint, newData *schema.Location) error {
-
+	log.Printf("UpdateLocation: %v", newData)
 	db := d.params.Database.GetDB()
 
 	dataToUpdate := map[string]interface{}{
 		"Name":         newData.Name,
 		"IsHeadOffice": newData.IsHeadOffice,
+		"Phone":        newData.Phone,
 		"Address":      newData.Address,
 		"City":         newData.City,
 		"State":        newData.State,

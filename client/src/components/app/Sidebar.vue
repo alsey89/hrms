@@ -1,7 +1,7 @@
 <template>
     <aside ref="sidebar"
         :class="['fixed top-0 left-0 h-full flex flex-col px-2 gap-2 border-r-2 border-accent bg-background select-none', isMobile ? 'w-3/4' : 'w-[250px]', 'z-50']">
-        <h2 class="text-lg font-semibold px-4 py-2"> People Matter </h2>
+        <h2 class="h-8 text-lg font-semibold px-4 py-2"> People Matter </h2>
         <div v-for="section in menuSections" :key="section.label">
             <h2 class="text-xs text-gray-500 p-2 border-t">{{ section.label }}</h2>
             <ul class="py-2">
