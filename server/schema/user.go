@@ -11,8 +11,8 @@ type User struct {
 	Companies []Company `json:"companies" gorm:"many2many:user_companies;"`
 	IsActive  bool      `json:"isActive"     gorm:"default:false"`
 	// ------------------------------------------------------------------------------------------------
-	RoleID *uint `json:"roleId" gorm:"constraint:OnDelete:NULL"`
-	Role   *Role `json:"role" gor:"foreignKey:RoleID"`
+	RoleID *uint `json:"roleId" gorm:"constraint:OnDelete:SET NULL;foreignKey:RoleID"`
+	Role   *Role `json:"role" gorm:"constraint:OnDelete:SET NULL;foreignKey:RoleID"`
 	// ------------------------------------------------------------------------------------------------
 	Email      string      `json:"email" gorm:"unique;type:varchar(100);not null"`
 	Password   string      `json:"-"          gorm:"type:varchar(100)"` //* Password is not returned in JSON

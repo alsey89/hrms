@@ -182,6 +182,39 @@ export const useCompanyStore = defineStore("company-store", {
         throw error;
       }
     },
+    async addDepartment(form) {
+      this.error = "";
+      try {
+        const response = await api.post(`admin/company/department`, form);
+        if (response.status >= 200 && response.status < 300) {
+          this.getCompany();
+          return true;
+        } else {
+          return false;
+        }
+      } catch (error) {
+        if (error.response) {
+          switch (error.response.status) {
+            case 400:
+              this.error = "Invalid request. Please try again.";
+              break;
+            case 401:
+              this.error = "Unauthorized. Please login.";
+              break;
+            case 404:
+              this.error = "Location not found. Please try again.";
+              break;
+            default:
+              this.error =
+                "Something went wrong. Please try again or contact support.";
+              break;
+          }
+        } else {
+          this.error = "Network error. Please try again or contact support.";
+        }
+        throw error;
+      }
+    },
     async updateDepartment(form) {
       this.error = "";
       try {
@@ -189,6 +222,141 @@ export const useCompanyStore = defineStore("company-store", {
           `admin/company/department/${form.id}`,
           form
         );
+        if (response.status >= 200 && response.status < 300) {
+          this.getCompany();
+          return true;
+        } else {
+          return false;
+        }
+      } catch (error) {
+        if (error.response) {
+          switch (error.response.status) {
+            case 400:
+              this.error = "Invalid request. Please try again.";
+              break;
+            case 401:
+              this.error = "Unauthorized. Please login.";
+              break;
+            case 404:
+              this.error = "Location not found. Please try again.";
+              break;
+            default:
+              this.error =
+                "Something went wrong. Please try again or contact support.";
+              break;
+          }
+        } else {
+          this.error = "Network error. Please try again or contact support.";
+        }
+        throw error;
+      }
+    },
+    async deleteDepartment(id) {
+      this.error = "";
+      try {
+        const response = await api.delete(`admin/company/department/${id}`);
+        if (response.status >= 200 && response.status < 300) {
+          this.getCompany();
+          return true;
+        } else {
+          return false;
+        }
+      } catch (error) {
+        if (error.response) {
+          switch (error.response.status) {
+            case 400:
+              this.error = "Invalid request. Please try again.";
+              break;
+            case 401:
+              this.error = "Unauthorized. Please login.";
+              break;
+            case 404:
+              this.error = "Location not found. Please try again.";
+              break;
+            default:
+              this.error =
+                "Something went wrong. Please try again or contact support.";
+              break;
+          }
+        } else {
+          this.error = "Network error. Please try again or contact support.";
+        }
+        throw error;
+      }
+    },
+    async addPosition(form) {
+      this.error = "";
+      try {
+        const response = await api.post(`admin/company/position`, form);
+        if (response.status >= 200 && response.status < 300) {
+          this.getCompany();
+          return true;
+        } else {
+          return false;
+        }
+      } catch (error) {
+        if (error.response) {
+          switch (error.response.status) {
+            case 400:
+              this.error = "Invalid request. Please try again.";
+              break;
+            case 401:
+              this.error = "Unauthorized. Please login.";
+              break;
+            case 404:
+              this.error = "Location not found. Please try again.";
+              break;
+            default:
+              this.error =
+                "Something went wrong. Please try again or contact support.";
+              break;
+          }
+        } else {
+          this.error = "Network error. Please try again or contact support.";
+        }
+        throw error;
+      }
+    },
+    async updatePosition(form) {
+      this.error = "";
+      try {
+        const response = await api.put(
+          `admin/company/position/${form.id}`,
+          form
+        );
+        if (response.status >= 200 && response.status < 300) {
+          this.getCompany();
+          return true;
+        } else {
+          return false;
+        }
+      } catch (error) {
+        if (error.response) {
+          switch (error.response.status) {
+            case 400:
+              this.error = "Invalid request. Please try again.";
+              break;
+            case 401:
+              this.error = "Unauthorized. Please login.";
+              break;
+            case 404:
+              this.error = "Location not found. Please try again.";
+              break;
+            default:
+              this.error =
+                "Something went wrong. Please try again or contact support.";
+              break;
+          }
+        } else {
+          this.error = "Network error. Please try again or contact support.";
+        }
+        throw error;
+      }
+    },
+    async deletePosition(id) {
+      this.error = "";
+      try {
+        const response = await api.delete(`admin/company/position/${id}`);
         if (response.status >= 200 && response.status < 300) {
           this.getCompany();
           return true;

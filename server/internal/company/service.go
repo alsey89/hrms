@@ -311,7 +311,7 @@ func (d *Domain) UpdatePosition(companyID *uint, positionID *uint, newData *sche
 	db := d.params.Database.GetDB()
 
 	dataToUpdate := map[string]interface{}{
-		"Title":          newData.Name,
+		"Name":           newData.Name,
 		"Description":    newData.Description,
 		"Duties":         newData.Duties,
 		"Qualifications": newData.Qualifications,

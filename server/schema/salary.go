@@ -45,10 +45,10 @@ const (
 
 type Payment struct {
 	BaseModel
-	CompanyID uint `json:"company_id" gorm:"constraint:OnDelete:CASCADE;not null"`
+	CompanyID uint `json:"companyId" gorm:"constraint:OnDelete:CASCADE;not null"`
 	// ------------------------------------------------------------------------------------------------
-	UserID        uint              `json:"userId"         gorm:"onUpdate:CASCADE;onDelete:CASCADE"`
-	SalaryID      uint              `json:"salaryId"       gorm:"onUpdate:CASCADE;onDelete:SET NULL"`
+	UserID        uint              `json:"userId"         gorm:"onDelete:CASCADE"`
+	SalaryID      uint              `json:"salaryId"       gorm:"onDelete:SET NULL"`
 	PaymentDate   time.Time         `json:"paymentDate"    gorm:"type:date"`
 	Amount        float64           `json:"amount"         gorm:"type:decimal(10,2)"`
 	PaymentMethod PaymentMethodEnum `json:"paymentMethod"  sql:"type:enum('cash','bank','cheque')"`

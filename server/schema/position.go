@@ -16,8 +16,8 @@ type Position struct {
 	MinSalary      int    `json:"minSalary"`
 	MaxSalary      int    `json:"maxSalary"`
 	// ------------------------------------------------------------------------------------------------
-	DepartmentID uint        `json:"departmentId"`
-	Department   *Department `json:"department" gorm:"foreignKey:DepartmentID"`
+	DepartmentID *uint       `json:"departmentId" gorm:"constraint:OnDelete:SET NULL;foreignKey:DepartmentID"`
+	Department   *Department `json:"department" gorm:"constraint:OnDelete:SET NULL;foreignKey:DepartmentID"`
 	// ------------------------------------------------------------------------------------------------
 	ManagerID    *uint       `json:"managerId"` //* should be nullable
 	Subordinates []*Position `json:"subordinates" gorm:"foreignKey:ManagerID"`

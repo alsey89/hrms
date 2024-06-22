@@ -41,20 +41,20 @@ const originRoutes = [
       },
       {
         isActive: true,
-        path: "locations",
+        path: "company/locations",
         name: "AdminLocation",
         component: () => import("../pages/admin/company/CompanyLocations.vue"),
       },
       {
         isActive: true,
-        path: "departments",
+        path: "company/departments",
         name: "AdminDepartment",
         component: () =>
           import("../pages/admin/company/CompanyDepartments.vue"),
       },
       {
         isActive: true,
-        path: "positions",
+        path: "company/positions",
         name: "AdminPosition",
         component: () => import("../pages/admin/company/CompanyPositions.vue"),
       },

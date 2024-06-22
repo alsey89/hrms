@@ -73,9 +73,9 @@ const menuSections = ref([
                 isOpen: false,
                 children: [
                     { name: 'Profile', icon: 'ooui:view-details-ltr', path: '/admin/company' },
-                    { name: 'Locations', icon: 'material-symbols:map', path: '/admin/locations' },
-                    { name: 'Departments', icon: 'system-uicons:hierarchy', path: '/admin/departments' },
-                    { name: 'Positions', icon: 'hugeicons:job-link', path: '/admin/positions' },
+                    { name: 'Locations', icon: 'material-symbols:map', path: '/admin/company/locations' },
+                    { name: 'Departments', icon: 'system-uicons:hierarchy', path: '/admin/company/departments' },
+                    { name: 'Positions', icon: 'hugeicons:job-link', path: '/admin/company/positions' },
                 ]
             },
             {

@@ -15,6 +15,11 @@ func (d *Domain) AuthenticateUserService(email, password string) (*schema.User, 
 		return nil, nil, err
 	}
 
+	// Check if user is active
+	if !user.IsActive {
+		return nil, nil, fmt.Errorf("[SignIn]: %w", ErrUserNotConfirmed)
+	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		return nil, nil, ErrInvalidCredentials
@@ -39,35 +44,6 @@ func (d *Domain) GetUserByEmailAndCompany(email string, companyId uint) (*schema
 		First(&user).Error
 	if err != nil {
 		return nil, err
-	}
-
-	return &user, nil
-}
-
-// Search for user by email, compare password, and return user if successful.
-func (d *Domain) SignInService(companyId uint, email string, password string) (*schema.User, error) {
-	db := d.params.Database.GetDB()
-
-	var user schema.User
-
-	result := db.
-		Where("email = ? AND company_id =?", email, companyId).
-		Preload("Role").
-		First(&user)
-	if result.Error != nil {
-		return nil, fmt.Errorf("[SignIn] %w", result.Error)
-	}
-
-	if !user.IsActive {
-		return nil, fmt.Errorf("[SignIn]: %w", ErrUserNotConfirmed)
-	}
-
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return nil, fmt.Errorf("[SignIn]: %w", ErrInvalidCredentials)
-		}
-		return nil, fmt.Errorf("[SignIn]: %w", err)
 	}
 
 	return &user, nil
