@@ -3,6 +3,7 @@ services:
     image: postgres:latest
     volumes:
       - ./database/data:/var/lib/postgresql/data
+      # - ./database/init-scripts:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     environment:
