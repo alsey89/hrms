@@ -73,6 +73,8 @@ func main() {
 			schema.Department{},
 			schema.Location{},
 			schema.User{},
+			schema.Role{},
+			schema.UserRole{},
 			schema.ContactInfo{},
 			schema.EmergencyContact{},
 			schema.Position{},

@@ -12,16 +12,16 @@ import (
 // middleware to check if user is admin
 func MustBeAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// get user level from token
-		level, err := getLevelFromToken(c)
+		// get user role from token
+		role, err := getRoleFromToken(c)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, common.APIResponse{
-				Message: "error getting level from token",
+				Message: "error getting role from token",
 				Data:    nil,
 			})
 		}
 
-		if level != "admin" && level != "root" {
+		if role != "admin" && role != "root" {
 			return c.JSON(http.StatusUnauthorized, common.APIResponse{
 				Message: "unauthorized",
 				Data:    nil,
@@ -35,16 +35,16 @@ func MustBeAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 // middleware to check if user is manager or above
 func MustBeManager(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// get user level from token
-		level, err := getLevelFromToken(c)
+		// get user role from token
+		role, err := getRoleFromToken(c)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, common.APIResponse{
-				Message: "error getting level from token",
+				Message: "error getting role from token",
 				Data:    nil,
 			})
 		}
 
-		if level != "manager" && level != "admin" && level != "root" {
+		if role != "manager" && role != "admin" && role != "root" {
 			return c.JSON(http.StatusUnauthorized, common.APIResponse{
 				Message: "unauthorized",
 				Data:    nil,
@@ -57,21 +57,21 @@ func MustBeManager(next echo.HandlerFunc) echo.HandlerFunc {
 
 // ------------------------------
 
-func getLevelFromToken(c echo.Context) (string, error) {
+func getRoleFromToken(c echo.Context) (string, error) {
 	user, ok := c.Get("user").(*jwt.Token)
 	if !ok {
-		return "", errors.New("[common.GetLevelFromToken] error getting user from token")
+		return "", errors.New("[common.GetroleFromToken] error getting user from token")
 	}
 
 	claims, ok := user.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", errors.New("[common.GetLevelFromToken] error getting claims from token")
+		return "", errors.New("[common.GetroleFromToken] error getting claims from token")
 	}
 
-	level, ok := claims["level"].(string)
+	role, ok := claims["role"].(string)
 	if !ok {
-		return "", errors.New("[common.GetLevelFromToken] error getting level from token")
+		return "", errors.New("[common.GetroleFromToken] error getting role from token")
 	}
 
-	return level, nil
+	return role, nil
 }

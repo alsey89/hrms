@@ -17,7 +17,7 @@ import (
 func (d *Domain) CreateNewCompanyAndRootUser(incomingData *NewCompany) (*uint, *schema.User, error) {
 	db := d.params.Database.GetDB()
 
-	// Create company
+	// populate company
 	newCompany := schema.Company{
 		Name:        incomingData.CompanyName,
 		CompanySize: incomingData.CompanySize,
@@ -29,7 +29,7 @@ func (d *Domain) CreateNewCompanyAndRootUser(incomingData *NewCompany) (*uint, *
 		return nil, nil, fmt.Errorf("[CreateNewCompanyAndRootUser] Error hashing password: %w", err)
 	}
 
-	// Create root user
+	// populate root user
 	newRootUser := schema.User{
 		Email:    incomingData.RootUserEmail,
 		Password: string(hashedPassword),
@@ -48,13 +48,13 @@ func (d *Domain) CreateNewCompanyAndRootUser(incomingData *NewCompany) (*uint, *
 	//* Create root role if it doesn't exist
 	var rootRole schema.Role
 	err = tx.
-		Where("level = ? AND company_id = ?", "root", newCompany.ID).
+		Where("name = ? AND company_id = ?", "root", newCompany.ID).
 		First(&rootRole).
 		Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		rootRole = schema.Role{
 			CompanyID:   newCompany.ID,
-			Level:       "root",
+			Name:        "root",
 			Description: "Root User with full access to the company resources",
 		}
 		if err := tx.Create(&rootRole).Error; err != nil {
@@ -70,18 +70,16 @@ func (d *Domain) CreateNewCompanyAndRootUser(incomingData *NewCompany) (*uint, *
 		return nil, nil, fmt.Errorf("[CreateNewCompanyAndRootUser] Error creating user: %w", err)
 	}
 
-	// Assign root role to the root user
-	err = tx.Model(&newRootUser).Association("Role").Append(&rootRole)
-	if err != nil {
-		tx.Rollback()
-		return nil, nil, fmt.Errorf("[CreateNewCompanyAndRootUser] Error assigning root role to user: %w", err)
+	// Assign root role to the root user with a new UserRole
+	userRole := schema.UserRole{
+		UserID:    newRootUser.ID,
+		RoleID:    rootRole.ID,
+		CompanyID: newCompany.ID,
 	}
 
-	// Assign the new company to the new root user
-	err = tx.Model(&newRootUser).Association("Companies").Append(&newCompany)
-	if err != nil {
+	if err := tx.Create(&userRole).Error; err != nil {
 		tx.Rollback()
-		return nil, nil, fmt.Errorf("[CreateNewCompanyAndRootUser] Error assigning company to user: %w", err)
+		return nil, nil, fmt.Errorf("[CreateNewCompanyAndRootUser] Error assigning root role to user: %w", err)
 	}
 
 	tx.Commit()

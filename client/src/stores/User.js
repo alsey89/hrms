@@ -5,7 +5,7 @@ import posthog from "posthog-js";
 
 export const useUserStore = defineStore("user-store", {
   state: () => ({
-    companies: [],
+    userRoles: [],
     userId: "",
     email: "",
     error: "",
@@ -57,7 +57,7 @@ export const useUserStore = defineStore("user-store", {
       try {
         const response = await api.post("/auth/signin", data);
         if (response.status >= 200 && response.status < 300) {
-          this.companies = response.data.data;
+          this.userRoles = response.data.data;
           router.push(`select-company?email=${payload.email}`);
         } else {
           return false;
@@ -79,10 +79,10 @@ export const useUserStore = defineStore("user-store", {
         throw error;
       }
     },
-    async getJwt(companyId, email, router) {
+    async getJwt(userRoleId, email, router) {
       this.error = "";
       let data = {
-        companyId: companyId,
+        userRoleId: userRoleId,
         email: email,
       };
       try {

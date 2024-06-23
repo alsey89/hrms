@@ -15,9 +15,9 @@ type Claims struct {
 }
 
 type SigninCredentials struct {
-	Email     string `json:"email" bson:"email"`
-	Password  string `json:"password" bson:"password"`
-	CompanyID uint   `json:"companyId" bson:"companyId"`
+	Email      string `json:"email" bson:"email"`
+	Password   string `json:"password" bson:"password"`
+	UserRoleID *uint  `json:"userRoleId" bson:"userRoleId"`
 }
 
 //------------------------------------------------------------

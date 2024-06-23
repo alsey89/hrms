@@ -3,11 +3,16 @@
         <Card v-if="showCard" class="w-[400px] md:w-[480px] flex flex-col gap-2 p-4">
             <div>
                 <h1 class="text-2xl font-bold">Select Company</h1>
-                <p class="text-sm">Select a company to sign in</p>
+                <p class="text-sm text-gray-600">Select a company to sign in</p>
             </div>
-            <div v-for="company in userStore.companies">
-                <Button @click="onSelect(company.id)" class="w-full">
-                    <div>{{ company.name }} - {{ company.id }}</div>
+            <div v-for="userRole in userStore.userRoles" :key="userRole.company.id">
+                <Button @click="onSelect(userRole.company.id)"
+                    class="w-full flex justify-between items-center px-4 py-2">
+                    <div>{{ userRole.company.name }}</div>
+                    <div class="border-r border-red-500 h-full mx-2"></div>
+                    <div>{{ userRole.role.name }}
+                        <span v-if="userRole.role.name == 'root'"> user</span>
+                    </div>
                 </Button>
             </div>
         </Card>

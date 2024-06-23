@@ -28,7 +28,7 @@ func (d *Domain) AuthenticateUserHandler(c echo.Context) error {
 	email := creds.Email
 	password := creds.Password
 
-	_, companies, err := d.AuthenticateUserService(email, password)
+	userRoles, err := d.AuthenticateUserService(email, password)
 	switch {
 	case err != nil:
 		d.logger.Error("[AuthenticateUserHandler]", zap.Error(err))
@@ -58,7 +58,7 @@ func (d *Domain) AuthenticateUserHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, common.APIResponse{
 		Message: "user authenticated",
-		Data:    companies,
+		Data:    userRoles,
 	})
 }
 
@@ -73,10 +73,9 @@ func (d *Domain) GenerateTokenHandler(c echo.Context) error {
 		})
 	}
 
-	email := creds.Email
-	companyId := creds.CompanyID
+	userRoleID := creds.UserRoleID
 
-	existingUser, err := d.GetUserByEmailAndCompany(email, companyId)
+	preloadedUserRole, err := d.GetUserBySelectedUserRole(userRoleID)
 	if err != nil {
 		d.logger.Error("[GenerateTokenHandler] error fetching user", zap.Error(err))
 		switch {
@@ -94,11 +93,12 @@ func (d *Domain) GenerateTokenHandler(c echo.Context) error {
 	}
 
 	claims := jwt.MapClaims{
-		"id":         existingUser.ID,
-		"companyId":  companyId,
-		"email":      existingUser.Email,
-		"level":      existingUser.Role.Level,
-		"locationId": existingUser.Role.LocationID,
+		"id":         preloadedUserRole.User.ID,
+		"email":      preloadedUserRole.User.Email,
+		"companyId":  preloadedUserRole.Company.ID,
+		"role":       preloadedUserRole.Role.Name,
+		"locationId": preloadedUserRole.LocationID,
+		"userRoleId": preloadedUserRole.ID,
 	}
 
 	t, err := d.params.JWT.GenerateToken("jwt_auth", claims)
@@ -129,92 +129,9 @@ func (d *Domain) GenerateTokenHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, common.APIResponse{
 		Message: "user has been signed in",
-		Data:    existingUser,
+		Data:    preloadedUserRole,
 	})
 }
-
-// func (d *Domain) SigninHandler(c echo.Context) error {
-// 	creds := new(SigninCredentials)
-// 	err := c.Bind(creds)
-// 	if err != nil {
-// 		d.logger.Error("[SigninHandler] error binding credentials", zap.Error(err))
-// 		return c.JSON(http.StatusBadRequest, common.APIResponse{
-// 			Message: "invalid form data",
-// 			Data:    nil,
-// 		})
-// 	}
-
-// 	email := creds.Email
-// 	password := creds.Password
-// 	companyId := creds.CompanyID
-
-// 	existingUser, err := d.SignInService(companyId, email, password)
-// 	switch {
-// 	case err != nil:
-// 		d.logger.Error("[SigninHandler]", zap.Error(err))
-// 		switch {
-// 		case errors.Is(err, gorm.ErrRecordNotFound):
-// 			return c.JSON(http.StatusNotFound, common.APIResponse{
-// 				Message: "user not found",
-// 				Data:    nil,
-// 			})
-// 		case errors.Is(err, ErrUserNotConfirmed):
-// 			return c.JSON(http.StatusForbidden, common.APIResponse{
-// 				Message: "user not confirmed",
-// 				Data:    nil,
-// 			})
-// 		case errors.Is(err, ErrInvalidCredentials):
-// 			return c.JSON(http.StatusUnauthorized, common.APIResponse{
-// 				Message: "invalid credentials",
-// 				Data:    nil,
-// 			})
-// 		default:
-// 			return c.JSON(http.StatusInternalServerError, common.APIResponse{
-// 				Message: "something went wrong",
-// 				Data:    nil,
-// 			})
-// 		}
-// 	}
-
-// 	claims := jwt.MapClaims{
-// 		"id":         existingUser.ID,
-// 		"companyId":  creds.CompanyID,
-// 		"email":      existingUser.Email,
-// 		"level":      existingUser.Role.Level,
-// 		"locationId": existingUser.Role.LocationID,
-// 	}
-
-// 	t, err := d.params.JWT.GenerateToken("jwt_auth", claims)
-// 	if err != nil {
-// 		d.logger.Error("[SigninHandler] error generating token", zap.Error(err))
-// 		return c.JSON(http.StatusInternalServerError, common.APIResponse{
-// 			Message: "something went wrong",
-// 			Data:    nil,
-// 		})
-// 	}
-// 	if t == nil {
-// 		d.logger.Error("[SigninHandler] token is nil")
-// 		return c.JSON(http.StatusInternalServerError, common.APIResponse{
-// 			Message: "something went wrong",
-// 			Data:    nil,
-// 		})
-// 	}
-
-// 	cookie := new(http.Cookie)
-// 	cookie.Name = "jwt"
-// 	cookie.Value = *t
-// 	cookie.HttpOnly = true
-// 	cookie.Secure = viper.GetBool("IS_PRODUCTION")
-// 	cookie.Path = "/"
-// 	cookie.Expires = time.Now().Add(time.Hour * 72)
-
-// 	c.SetCookie(cookie)
-
-// 	return c.JSON(http.StatusOK, common.APIResponse{
-// 		Message: "user has been signed in",
-// 		Data:    existingUser,
-// 	})
-// }
 
 func (d *Domain) SignoutHandler(c echo.Context) error {
 	cookie := new(http.Cookie)
@@ -260,18 +177,9 @@ func (d *Domain) ConfirmationHandler(c echo.Context) error {
 		})
 	}
 
-	floatCompanyID, ok := claims["companyId"].(float64)
-	if !ok {
-		return c.JSON(http.StatusUnauthorized, common.APIResponse{
-			Message: "error asserting company id",
-			Data:    nil,
-		})
-	}
-
 	uintID := uint(floatID)
-	uintCompanyID := uint(floatCompanyID)
 
-	err := d.ConfirmEmailService(uintID, uintCompanyID)
+	err := d.ConfirmEmailService(uintID)
 	if err != nil {
 		d.logger.Error("[ConfirmationHandler]", zap.Error(err))
 		return c.JSON(http.StatusInternalServerError, common.APIResponse{

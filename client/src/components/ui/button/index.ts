@@ -8,9 +8,9 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "border-2 border-secondary bg-primary text-primary-foreground hover:bg-primary-foreground hover:text-primary",
+          "border-2 border-secondary bg-primary text-primary-foreground hover:bg-primary-foreground hover:text-primary transition-all duration-300",
         border:
-          "border-2 border-secondary text-primary hover:bg-primary hover:text-primary-foreground",
+          "border-2 border-secondary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300",
         // default: 'bg-primary text-primary-foreground hover:bg-primary/90',
         // destructive:
         //   'bg-destructive text-destructive-foreground hover:bg-destructive/90',
