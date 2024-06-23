@@ -22,10 +22,7 @@
                         <textarea id="addDepartmentDescription" v-model.trim="addDepartmentForm.description"
                             class="bg-background border px-2"></textarea>
                     </div>
-                    <button type="submit"
-                        class="border rounded-md hover:cursor-pointer hover:bg-primary hover:text-primary-foreground mt-2">
-                        Submit
-                    </button>
+                    <Button type="submit" variant="border" class="mt-2"> Submit </Button>
                 </form>
             </Card>
         </div>
@@ -55,14 +52,10 @@
                             <textarea id="editDepartmentDescription" v-model.trim="editDepartmentForm.description"
                                 class="bg-background border px-2"></textarea>
                         </div>
-                        <button type="button" @click="onDeleteDepartment(department)"
-                            class="border rounded-md hover:cursor-pointer hover:bg-destructive hover:text-destructive-foreground mt-2">
-                            Delete
-                        </button>
-                        <button type="submit"
-                            class="border rounded-md hover:cursor-pointer hover:bg-primary hover:text-primary-foreground mt-2">
-                            Submit
-                        </button>
+                        <Button @click="onDeleteDepartment(department)" type="button" variant="border-destructive"
+                            class="mt-2"> Delete
+                        </Button>
+                        <Button type="submit" variant="border" class="mt-2"> Submit </Button>
                     </form>
                 </Card>
                 <Card class="w-full flex flex-col gap-4 p-4">
@@ -98,6 +91,7 @@ import { ref, reactive, onMounted } from 'vue';
 import { useCompanyStore } from '@/stores/Company';
 import { Icon } from '@iconify/vue';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const companyStore = useCompanyStore();
 

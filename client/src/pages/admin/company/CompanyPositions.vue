@@ -55,10 +55,7 @@
                         <input type="number" id="addPositionMaxSalary" v-model.number="addPositionForm.maxSalary"
                             class="bg-background border px-2" />
                     </div>
-                    <button type="submit"
-                        class="border rounded-md hover:cursor-pointer hover:bg-primary hover:text-primary-foreground mt-2">
-                        Submit
-                    </button>
+                    <Button type="submit" variant="border" class="mt-2"> Submit </Button>
                 </form>
             </Card>
         </div>
@@ -122,14 +119,10 @@
                             <input type="number" id="editPositionMaxSalary" v-model.number="editPositionForm.maxSalary"
                                 class="bg-background border px-2" />
                         </div>
-                        <button type="button" @click="onDeletePosition(position)"
-                            class="border rounded-md hover:cursor-pointer hover:bg-destructive hover:text-destructive-foreground mt-2">
-                            Delete
-                        </button>
-                        <button type="submit"
-                            class="border rounded-md hover:cursor-pointer hover:bg-primary hover:text-primary-foreground mt-2">
-                            Submit
-                        </button>
+                        <Button @click="onDeletePosition(position)" type="button" variant="border-destructive"
+                            class="mt-2"> Delete
+                        </Button>
+                        <Button type="submit" variant="border" class="mt-2"> Submit </Button>
                     </form>
                 </Card>
                 <Card class="w-full flex flex-col gap-4 p-4">
@@ -162,7 +155,7 @@
         </div>
     </div>
     <!-- confirmation modal -->
-    <div v-auto-animate v-if="showConfirmationDialog" @click="showConfirmationDialog = false"
+    <div v-if="showConfirmationDialog" @click="showConfirmationDialog = false"
         class="fixed ml-0 md:ml-[250px] inset-0 bg-black bg-opacity-50 flex justify-center items-center">
         <Card class="w-[90%] md:w-[25%] p-4">
             <p>Are you sure you want to delete this position?</p>
@@ -185,6 +178,7 @@ import { ref, reactive, onMounted } from 'vue';
 import { useCompanyStore } from '@/stores/Company';
 import { Icon } from '@iconify/vue';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const companyStore = useCompanyStore();
 

@@ -114,14 +114,10 @@
                             <input type="text" id="editLocationPostalCode" v-model.trim="editLocationForm.postalCode"
                                 class="bg-background border px-2" />
                         </div>
-                        <button type="button" @click="onDeleteLocation(location)"
-                            class="border rounded-md hover:cursor-pointer hover:bg-destructive hover:text-destructive-foreground mt-2">
-                            Delete
-                        </button>
-                        <button type="submit"
-                            class="border rounded-md hover:cursor-pointer hover:bg-primary hover:text-primary-foreground mt-2">
-                            Submit
-                        </button>
+                        <Button @click="onDeleteLocation(location)" type="button" variant="border-destructive"
+                            class="mt-2"> Delete
+                        </Button>
+                        <Button type="submit" variant="border" class="mt-2"> Submit </Button>
                     </form>
                 </Card>
                 <Card class="w-full flex flex-col gap-4 p-4">
@@ -161,6 +157,7 @@ import { ref, reactive, onMounted } from 'vue';
 import { useCompanyStore } from '@/stores/Company';
 import { Icon } from '@iconify/vue';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const companyStore = useCompanyStore();
 

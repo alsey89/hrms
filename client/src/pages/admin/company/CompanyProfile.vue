@@ -61,10 +61,7 @@
                         <input type="text" id="companyPostalCode" v-model.trim="editCompanyForm.postalCode"
                             class="bg-background border px-2" />
                     </div>
-                    <button type="submit"
-                        class="border rounded-md hover:cursor-pointer hover:bg-primary hover:text-primary-foreground mt-2">
-                        Submit
-                    </button>
+                    <Button type="submit" variant="border" class="mt-2"> Submit </Button>
                 </form>
             </Card>
             <Card class="w-full flex flex-col gap-4 p-4">
@@ -92,6 +89,7 @@ import { onBeforeMount, onMounted, reactive, ref } from 'vue';
 import { useCompanyStore } from '@/stores/Company';
 import { Icon } from '@iconify/vue';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 const companyStore = useCompanyStore();
