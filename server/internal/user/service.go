@@ -10,18 +10,15 @@ import (
 //! User ------------------------------------------------------------
 
 // Get all users in company
-func (d *Domain) GetAllUsers(companyID *uint) ([]schema.User, error) {
+func (d *Domain) GetAllCompanyUsers(companyID *uint) ([]schema.User, error) {
 	db := d.params.Database.GetDB()
 
 	var users []schema.User
-
-	result := db.
-		Preload("UserPositions", "end_date IS NULL OR end_date > ?", time.Now()). // Only get active user positions
-		Where("company_id = ?", companyID).
+	db.
+		Preload("UserRoles", "company_id = ?", companyID).
+		Preload("UserRoles.Role").
+		Preload("UserRoles.Location").
 		Find(&users)
-	if result.Error != nil {
-		return nil, fmt.Errorf("[GetAllUsers] %w", result.Error)
-	}
 
 	return users, nil
 }

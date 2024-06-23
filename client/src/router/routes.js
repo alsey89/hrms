@@ -58,6 +58,12 @@ const originRoutes = [
         name: "AdminPosition",
         component: () => import("../pages/admin/company/CompanyPositions.vue"),
       },
+      {
+        isActive: true,
+        path: "user",
+        name: "AdminUsers",
+        component: () => import("../pages/admin/user/Users.vue"),
+      },
     ],
   },
   {

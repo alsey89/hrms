@@ -16,7 +16,9 @@
                         </span>
                     </div>
                     <div v-else @click="navigateTo(item.path)" :class="['flex items-center p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent',
-                        item.path === $route.path ? 'border-primary/20 bg-gray-100' : '']">
+                        item.path === $route.path ? 'border-primary/20 bg-gray-100' : '',
+                        item.disabled ? 'opacity-50 cursor-not-allowed' : ''
+                    ]">
                         <Icon :icon="item.icon" class="text-xl" />
                         <span class="ml-3">{{ item.name }}</span>
                     </div>
@@ -42,26 +44,28 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { gsap } from 'gsap';
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
+import { useUserStore } from '@/stores/User';
+
+const userStore = useUserStore();
 
 const props = defineProps({
     showSidebar: Boolean,
-    isMobile: Boolean
+    isMobile: Boolean,
+    selectedUser: Object
 });
 
 const router = useRouter();
 const navigateTo = (path) => {
-    // Prevent navigating to the same route
-    //* currentRoute is a ref
     if (router.currentRoute.value.path === path) {
         return;
     }
     router.push(path);
 };
-
+const selectedUser = computed(() => userStore.selectedUser);
 const menuSections = ref([
     {
         label: 'Administrator',
@@ -89,6 +93,19 @@ const menuSections = ref([
                     { name: 'Claims', icon: 'material-symbols:money', path: '/admin/claims' },
                     { name: 'Compliance', icon: 'octicon:law', path: '/admin/compliance' },
                 ]
+            },
+            { name: 'Users', icon: 'ph:user-list', path: '/admin/user' },
+            {
+                name: selectedUser == null ? `${selectedUser.firstName} ${selectedUser.lastName}` : 'No User Selected',
+                icon: selectedUser == null ? 'mdi:account' : 'mdi:account-off',
+                path: selectedUser == null ? `/admin/user/${selectedUser.id}` : null,
+                disabled: selectedUser == null,
+                children: selectedUser == null ? [
+                    { name: 'Profile', icon: 'fluent:slide-text-person-16-filled', path: `/admin/user/${selectedUser.id}/profile` },
+                    { name: 'Leave', icon: 'material-symbols:sick-outline', path: `/admin/user/${selectedUser.id}/leave` },
+                    { name: 'Salary', icon: 'material-symbols:payments', path: `/admin/user/${selectedUser.id}/salary` },
+                    { name: 'Claims', icon: 'material-symbols:money-outline', path: `/admin/user/${selectedUser.id}/claims` },
+                ] : null
             },
         ]
     },
@@ -131,6 +148,7 @@ const menuSections = ref([
 const submenu = ref([]);
 
 const toggle = (item, event) => {
+    if (item.disabled) return;
     if (!item.children) return;
     item.isOpen = !item.isOpen;
     const submenu = event.currentTarget.nextElementSibling;
@@ -152,8 +170,6 @@ const setInitialState = () => {
     });
 };
 
-// ----------------- SIDEBAR -----------------
-
 const sidebar = ref(null);
 
 const animateSidebar = async () => {
@@ -165,8 +181,6 @@ const animateSidebar = async () => {
 watch(() => props.showSidebar, () => {
     animateSidebar();
 });
-
-// ----------------- LIFECYCLE -----------------
 
 onMounted(async () => {
     animateSidebar();

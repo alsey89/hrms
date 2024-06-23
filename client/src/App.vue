@@ -4,13 +4,13 @@
 
 <script setup>
 import { onMounted } from 'vue';
-import { useUserStore } from '@/stores/User';
+import { useAuthStore } from '@/stores/Auth';
 import posthog from 'posthog-js';
 
-const userStore = useUserStore();
+const authStore = useAuthStore();
 
 onMounted(() => {
-  if (userStore.isAuthenticated) {
+  if (authStore.isAuthenticated) {
     posthog.identify(authStore.user.id);
     authStore.setIdentified(true); // Set a flag in your auth store to mark as identified
   }

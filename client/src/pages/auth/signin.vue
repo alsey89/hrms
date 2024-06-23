@@ -3,9 +3,9 @@
         <Card v-if="showCard" class="w-[400px] md:w-[480px]">
             <form @submit.prevent="submitForm" v-auto-animate class="flex flex-col gap-4 p-4">
                 <!-- Error -->
-                <section v-if="userStore.getError">
-                    <p class="text-base font-bold text-destructive">Error: {{ userStore.getError }}</p>
-                    <hr v-if="userStore.getError" class="border-t border-gray-300 my-4">
+                <section v-if="authStore.getError">
+                    <p class="text-base font-bold text-destructive">Error: {{ authStore.getError }}</p>
+                    <hr v-if="authStore.getError" class="border-t border-gray-300 my-4">
                 </section>
                 <!-- email -->
                 <div v-auto-animate>
@@ -42,10 +42,10 @@ import { Icon } from '@iconify/vue';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-import { useUserStore } from '@/stores/User';
+import { useAuthStore } from '@/stores/Auth';
 
 const router = useRouter();
-const userStore = useUserStore();
+const authStore = useAuthStore();
 const form = reactive({
     email: '',
     emailErr: '',
@@ -67,7 +67,7 @@ const submitForm = async () => {
     }
 
     try {
-        const success = await userStore.signin(form, router);
+        const success = await authStore.signin(form, router);
         if (success) {
             form.submitting = false;
             router.push('select-company');
@@ -89,7 +89,7 @@ const validateEmail = (email) => {
 };
 
 onMounted(() => {
-    userStore.getCsrfToken();
+    authStore.getCsrfToken();
     showCard.value = true;
 });
 </script>

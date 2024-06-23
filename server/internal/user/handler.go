@@ -179,7 +179,7 @@ func (d *Domain) GetAllUsersHandler(c echo.Context) error {
 		})
 	}
 
-	users, err := d.GetAllUsers(companyID)
+	users, err := d.GetAllCompanyUsers(companyID)
 	if err != nil {
 		d.logger.Error("[GetAllUsersHandler]", zap.Error(err))
 		return c.JSON(http.StatusInternalServerError, common.APIResponse{

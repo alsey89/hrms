@@ -2,13 +2,13 @@
 </template>
 
 <script setup>
-import { useUserStore } from '@/stores/User';
+import { useAuthStore } from '@/stores/Auth';
 import { onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 const router = useRouter();
 
 onBeforeMount(() => {
-    const userStore = useUserStore();
-    userStore.signout(router);
+    const authStore = useAuthStore();
+    authStore.signout(router);
 });
 </script>

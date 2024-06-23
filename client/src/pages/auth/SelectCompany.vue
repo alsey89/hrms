@@ -5,7 +5,7 @@
                 <h1 class="text-2xl font-bold">Select Company</h1>
                 <p class="text-sm text-gray-600">Select a company to sign in</p>
             </div>
-            <div v-for="userRole in userStore.userRoles" :key="userRole.company.id">
+            <div v-for="userRole in authStore.userRoles" :key="userRole.company.id">
                 <Button @click="onSelect(userRole.company.id)"
                     class="w-full flex justify-between items-center px-4 py-2">
                     <div>{{ userRole.company.name }}</div>
@@ -27,10 +27,10 @@ import { Icon } from '@iconify/vue';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-import { useUserStore } from '@/stores/User';
+import { useAuthStore } from '@/stores/Auth';
 
 const router = useRouter();
-const userStore = useUserStore();
+const authStore = useAuthStore();
 
 const showCard = ref(false);
 
@@ -42,11 +42,11 @@ const onSelect = async (companyId) => {
         console.error('Email not found');
         return;
     }
-    const success = await userStore.getJwt(companyId, email, router);
+    const success = await authStore.getJwt(companyId, email, router);
 };
 
 onMounted(() => {
-    userStore.getCsrfToken();
+    authStore.getCsrfToken();
     showCard.value = true;
 });
 </script>

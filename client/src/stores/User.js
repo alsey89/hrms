@@ -1,75 +1,34 @@
 import { defineStore } from "pinia";
-import axios from "axios";
 import api from "@/plugins/axios";
-import posthog from "posthog-js";
 
 export const useUserStore = defineStore("user-store", {
   state: () => ({
-    userRoles: [],
-    userId: "",
-    email: "",
+    users: [],
+    selectedUser: null,
     error: "",
   }),
   getters: {
-    getError: (state) => state.error,
-    getUserId: (state) => state.userId,
-    getEmail: (state) => state.email,
-    isAuthenticated: (state) => state.userId !== "",
+    getSelectedUser: (state) => state.selectedUser,
   },
   actions: {
-    async createCompany(payload, router) {
-      this.error = "";
-      const data = {
-        companyName: payload.companyName,
-        companySize: payload.companySize,
-        adminEmail: payload.adminEmail,
-        password: payload.password,
-        confirmPassword: payload.confirmPassword,
-      };
-      try {
-        const response = await api.post("/company", data);
-        if (response.status >= 200 && response.status < 300) {
-          return true;
-        } else {
-          return false;
-        }
-      } catch (error) {
-        if (error.response) {
-          if (error.response.status === 409) {
-            this.error = "User already exists. Please login.";
-            setTimeout(() => {
-              router.push("/auth/signin");
-            }, 3000);
-          } else {
-            this.error =
-              "Something went wrong. Please try again or contact support.";
-          }
-        }
-        throw error;
-      }
+    //setters
+    async setSelectedUser(user) {
+      this.selectedUser = user;
     },
-    async signin(payload, router) {
-      this.error = "";
-      let data = {
-        email: payload.email,
-        password: payload.password,
-      };
+    async getUsers() {
       try {
-        const response = await api.post("/auth/signin", data);
-        if (response.status >= 200 && response.status < 300) {
-          this.userRoles = response.data.data;
-          router.push(`select-company?email=${payload.email}`);
-        } else {
-          return false;
-        }
+        const response = await api.get("/admin/user");
+        this.users = response.data.data;
       } catch (error) {
         switch (error.response?.status) {
-          case 401:
-          case 404:
-            this.error = "Invalid email or password. Please try again.";
+          case 400:
+            this.error = "Invalid request. Please try again.";
             break;
-          case 403:
-            this.error = "Please verify your email address.";
+          case 401:
+            this.error = "Unauthorized. Please login.";
+            break;
+          case 404:
+            this.error = "Company not found. Please try again.";
             break;
           default:
             this.error =
@@ -77,53 +36,6 @@ export const useUserStore = defineStore("user-store", {
             break;
         }
         throw error;
-      }
-    },
-    async getJwt(userRoleId, email, router) {
-      this.error = "";
-      let data = {
-        userRoleId: userRoleId,
-        email: email,
-      };
-      try {
-        const response = await api.post("/auth/signin/token", data);
-        if (response.status >= 200 && response.status < 300) {
-          this.userId = response.data.data.id;
-          this.email = response.data.data.email;
-          posthog.identify(response.data.data.email);
-          router.push("/");
-        }
-      } catch (error) {
-        switch (error.response?.status) {
-          case 401:
-          case 404:
-            this.error = "Invalid email or password. Please try again.";
-            break;
-          case 403:
-            this.error = "Please verify your email address.";
-            break;
-          default:
-            this.error =
-              "Something went wrong. Please try again or contact support.";
-            break;
-        }
-        throw error;
-      }
-    },
-    async signout(router) {
-      this.userId = "";
-      this.email = "";
-      posthog.reset();
-      router.push("/auth/signin");
-    },
-    async getCsrfToken() {
-      try {
-        const response = await api.get("/auth/csrf");
-        if (response.status >= 200 && response.status < 300) {
-          return true;
-        }
-      } catch (err) {
-        return err;
       }
     },
   },

@@ -14,9 +14,9 @@
 
             <form v-auto-animate @submit.prevent="submitForm" class="flex flex-col gap-4 p-4">
                 <!-- Error -->
-                <section v-if="userStore.getError">
-                    <p class="text-base font-bold text-destructive">Error: {{ userStore.getError }}</p>
-                    <hr v-if="userStore.getError" class="border-t border-gray-300 my-4">
+                <section v-if="authStore.getError">
+                    <p class="text-base font-bold text-destructive">Error: {{ authStore.getError }}</p>
+                    <hr v-if="authStore.getError" class="border-t border-gray-300 my-4">
                 </section>
                 <!-- Company Information -->
                 <section class="flex flex-col gap-2">
@@ -120,9 +120,9 @@ import { Icon } from '@iconify/vue';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-import { useUserStore } from '@/stores/User';
+import { useAuthStore } from '@/stores/Auth';
 const router = useRouter();
-const userStore = useUserStore();
+const authStore = useAuthStore();
 const companyCreated = ref(false);
 const form = reactive({
     companyName: '',
@@ -171,7 +171,7 @@ const submitForm = async () => {
     }
 
     try {
-        const success = await userStore.createCompany(form, router);
+        const success = await authStore.createCompany(form, router);
         if (success) {
             companyCreated.value = true;
             form.submitting = false;
@@ -219,7 +219,7 @@ const validatePassword = (password, confirmPassword, minLength = 6) => {
 
 onBeforeMount(() => {
     try {
-        userStore.getCsrfToken();
+        authStore.getCsrfToken();
     } catch (error) {
         console.error(error);
     }
