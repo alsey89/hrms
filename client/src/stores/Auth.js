@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { useRouter } from "vue-router";
 import axios from "axios";
 import api from "@/plugins/axios";
 import posthog from "posthog-js";
@@ -110,9 +111,13 @@ export const useAuthStore = defineStore("auth-store", {
         throw error;
       }
     },
-    async signout(router) {
-      this.userId = "";
-      this.email = "";
+    async signout() {
+      const router = useRouter();
+      try {
+        await api.post("/auth/signout");
+      } catch (error) {
+        console.log(error);
+      }
       posthog.reset();
       router.push("/auth/signin");
     },

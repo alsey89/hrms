@@ -7,7 +7,7 @@
         <div v-if="showSidebar && isMobile" @click="toggleSidebar" class="fixed inset-0 bg-black bg-opacity-40 z-40">
         </div>
         <!-- sidebar -->
-        <Sidebar :showSidebar="showSidebar" :isMobile="isMobile" />
+        <Sidebar :showSidebar="showSidebar" :isMobile="isMobile" @closeSidebar="toggleSidebar" />
         <!-- main content -->
         <div :class="{ 'ml-[250px]': showSidebar && !isMobile, 'ml-0': !showSidebar || isMobile }"
             class="w-full h-full overflow-y-auto">

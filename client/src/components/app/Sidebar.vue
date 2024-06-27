@@ -6,7 +6,12 @@
             <h2 class="text-xs text-gray-500 p-2 border-t">{{ section.label }}</h2>
             <ul class="py-2">
                 <li v-for="item in section.items" :key="item.name" class="group">
-                    <div v-if="item.children" @click="toggle(item, $event)"
+                    <div v-if="item.disabledUntilSelected && !selectedUser"
+                        class="flex items-center p-2 border-2 border-background rounded-md opacity-50 cursor-not-allowed">
+                        <Icon :icon="item.disabledIcon" class="text-xl" />
+                        <span class="ml-3">{{ item.disabledText }}</span>
+                    </div>
+                    <div v-else-if="item.children" @click="toggle(item, $event)"
                         class="flex items-center p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent">
                         <Icon :icon="item.icon" class="text-xl" />
                         <span class="ml-3">{{ item.name }}</span>
@@ -16,13 +21,10 @@
                         </span>
                     </div>
                     <div v-else @click="navigateTo(item.path)" :class="['flex items-center p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent',
-                        item.path === $route.path ? 'border-primary/20 bg-gray-100' : '',
-                        item.disabled ? 'opacity-50 cursor-not-allowed' : ''
-                    ]">
+                        item.path === $route.path ? 'border-primary/20 bg-gray-100' : '']">
                         <Icon :icon="item.icon" class="text-xl" />
                         <span class="ml-3">{{ item.name }}</span>
                     </div>
-
                     <ul ref="submenu" class="ml-8 overflow-hidden">
                         <li @click="navigateTo(child.path)" v-for="child in item.children" :key="child.name" :class="['p-2 border-2 border-background rounded-md cursor-pointer hover:border-accent',
                             child.path === $route.path ? 'border-primary/20 bg-gray-100' : '']">
@@ -44,7 +46,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue';
 import { gsap } from 'gsap';
 import { Icon } from '@iconify/vue';
 import { useRouter } from 'vue-router';
@@ -57,6 +59,7 @@ const props = defineProps({
     isMobile: Boolean,
     selectedUser: Object
 });
+const emit = defineEmits(['closeSidebar']);
 
 const router = useRouter();
 const navigateTo = (path) => {
@@ -64,8 +67,18 @@ const navigateTo = (path) => {
         return;
     }
     router.push(path);
+    //emit close sidebar event
+    if (props.isMobile) {
+        emit('closeSidebar');
+    }
 };
 const selectedUser = computed(() => userStore.selectedUser);
+// const selectedUser = {
+//     id: 1,
+//     firstName: 'John',
+//     lastName: 'Doe'
+// };
+
 const menuSections = ref([
     {
         label: 'Administrator',
@@ -96,16 +109,18 @@ const menuSections = ref([
             },
             { name: 'Users', icon: 'ph:user-list', path: '/admin/user' },
             {
-                name: selectedUser == null ? `${selectedUser.firstName} ${selectedUser.lastName}` : 'No User Selected',
-                icon: selectedUser == null ? 'mdi:account' : 'mdi:account-off',
-                path: selectedUser == null ? `/admin/user/${selectedUser.id}` : null,
-                disabled: selectedUser == null,
-                children: selectedUser == null ? [
+                name: selectedUser.value ? `${selectedUser.value.firstName} ${selectedUser.value.lastName}` : 'No User Selected',
+                icon: 'material-symbols:account-circle',
+                path: `/admin/user/${selectedUser.id}`,
+                disabledUntilSelected: true,
+                disabledIcon: 'material-symbols:account-circle-off',
+                disabledText: 'No user selected',
+                children: [
                     { name: 'Profile', icon: 'fluent:slide-text-person-16-filled', path: `/admin/user/${selectedUser.id}/profile` },
                     { name: 'Leave', icon: 'material-symbols:sick-outline', path: `/admin/user/${selectedUser.id}/leave` },
                     { name: 'Salary', icon: 'material-symbols:payments', path: `/admin/user/${selectedUser.id}/salary` },
                     { name: 'Claims', icon: 'material-symbols:money-outline', path: `/admin/user/${selectedUser.id}/claims` },
-                ] : null
+                ]
             },
         ]
     },

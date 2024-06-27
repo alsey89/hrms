@@ -68,10 +68,6 @@ const submitForm = async () => {
 
     try {
         const success = await authStore.signin(form, router);
-        if (success) {
-            form.submitting = false;
-            router.push('select-company');
-        }
     } catch (error) {
         console.error(error);
         form.submitting = false;
